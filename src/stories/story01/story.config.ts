@@ -23,6 +23,7 @@ export const story01: StoryConfig = {
     endLine: 'WE FOUND A BETTER WAY.',
     sector: 'Corporate Technology',
     storyNumber: 1,
+    storyLabel: 'Story',
     tagline: 'Small improvements can create meaningful impact.',
     logo: null,
   },
@@ -35,6 +36,7 @@ export const story01: StoryConfig = {
     team: null,
     photo: null,
     focalPoint: { x: 0.38, y: 0.4 },
+    backPhoto: null,
   },
 
   ui: {
@@ -66,11 +68,13 @@ export const story01: StoryConfig = {
     annotations: ['Manual', 'Repeated Daily', 'Paper-Based', 'Multiple Follow-ups', 'High Manual Effort', 'Risk of Human Error'],
     artifacts: {
       form: {
+        kicker: 'Form',
         title: 'Device Handover Form',
         fields: ['Employee', 'Device', 'Site'],
         signatureLabel: 'Signature',
       },
       email: {
+        toLabel: 'To',
         to: 'Asset Team',
         subject: 'Device handover',
         preview: 'Handover form completed.',

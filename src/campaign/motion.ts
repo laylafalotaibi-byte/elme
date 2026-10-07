@@ -9,20 +9,15 @@ export const ease = {
   out: Easing.bezier(0.16, 1, 0.3, 1),
   inOut: Easing.bezier(0.65, 0, 0.35, 1),
   in: Easing.bezier(0.7, 0, 0.84, 0),
-  soft: Easing.bezier(0.33, 1, 0.68, 1),
 } as const;
 
 export const dur = {
-  before: 12,
-  after: 28,
   line: 22,
   word: 18,
   exit: 14,
 } as const;
 
 export const stagger = {
-  before: 5,
-  after: 10,
   word: 4,
 } as const;
 
@@ -58,3 +53,13 @@ export const springAt = (frame: number, fps: number, start: number, config: { da
 
 /** Linear interpolation helper. */
 export const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
+
+/**
+ * A cubic "glide" from velocity v0 to v1 (0 = at rest). glide(0, 0) peaks at 1.5× the
+ * average speed — far gentler than ease.inOut for long moves, so nothing strobes.
+ */
+export const glide = (v0: number, v1: number) => Easing.bezier(1 / 3, v0 / 3, 2 / 3, 1 - v1 / 3);
+
+/** 0→1 progress across a [start, end] frame span. */
+export const span = (frame: number, s: readonly [number, number], easing: (t: number) => number = ease.inOut) =>
+  progress(frame, s[0], s[1] - s[0], easing);

@@ -1,9 +1,9 @@
-import React from 'react';
-import { AbsoluteFill, Img, staticFile } from 'remotion';
+import React, { useId } from 'react';
+import { AbsoluteFill, Img, interpolateColors, staticFile } from 'remotion';
 import { colors, fonts } from '../../campaign/theme';
 import { roomPalette, type Light } from '../../campaign/light';
 import { useStory } from '../../campaign/StoryContext';
-import { PROFILE_HAIR, PROFILE_HEAD, PROFILE_TORSO } from '../portrait/silhouettes';
+import { PROFILE_COLLAR, PROFILE_EAR, PROFILE_HAIR, PROFILE_HEAD, PROFILE_TORSO } from '../portrait/silhouettes';
 
 /**
  * HeroShot — the full-bleed shot of the person, looking right towards his screen.
@@ -35,8 +35,8 @@ export const HeroShot: React.FC<{
   light: Light;
   framing?: HeroFraming;
   /**
-   * Warm front key light on his face (Scene 05: his decision brings the light). 0 = rim only,
-   * 1 = a soft key; values up to ~2.5 read as a strong key on the silhouette placeholder.
+   * Warm front key light on his face (Scene 05: his decision brings the light).
+   * 0 = rim only, 1 = a clear key; clamped to 0…1.5.
    */
   keyLight?: number;
   /** Rack focus: blur on the person in px. */
@@ -51,7 +51,11 @@ export const HeroShot: React.FC<{
   const { photo, focalPoint } = story.employee;
   const pal = roomPalette(light);
   const f = FRAMING[framing];
-  const id = `hero-${framing}`;
+  const id = `hero-${framing}-${useId().replace(/:/g, '')}`;
+  const key = Math.max(0, Math.min(1.5, keyLight));
+  // The side of him that faces the screen catches a little light; the far side stays dark.
+  const rimOpacity = Math.max(0, (0.42 + 0.4 * screenGlow * (1 - light.exposure * 0.45)) * (1 - Math.min(1, key) * 0.3));
+  const figureLit = interpolateColors(0.09 + light.exposure * 0.06, [0, 1], [pal.figure, pal.screen]);
 
   return (
     <AbsoluteFill style={{ overflow: 'hidden', backgroundColor: pal.wall, ...style }}>
@@ -71,7 +75,7 @@ export const HeroShot: React.FC<{
                 height: '100%',
                 objectFit: 'cover',
                 objectPosition: `${focalPoint.x * 100}% ${focalPoint.y * 100}%`,
-                filter: `grayscale(${0.92 - light.warmth * 0.1}) sepia(${light.warmth * 0.22}) brightness(${0.45 + light.exposure * 0.6 + keyLight * 0.12}) contrast(1.08) blur(${blur}px)`,
+                filter: `grayscale(${0.92 - light.warmth * 0.1}) sepia(${light.warmth * 0.22}) brightness(${0.45 + light.exposure * 0.6 + key * 0.12}) contrast(1.08) blur(${blur}px)`,
               }}
             />
             <AbsoluteFill
@@ -94,69 +98,94 @@ export const HeroShot: React.FC<{
                 <stop offset="0" stopColor={pal.screenSpill} stopOpacity={screenGlow} />
                 <stop offset="1" stopColor={pal.screenSpill} stopOpacity={0} />
               </radialGradient>
-              <linearGradient id={`${id}-fig`} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0" stopColor={pal.figure} />
-                <stop offset="1" stopColor={pal.figure} />
+              {/* Out-of-focus room, drawn as soft gradients (cheaper than blurring shapes). */}
+              <linearGradient id={`${id}-window`} x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0" stopColor={pal.window} stopOpacity={0} />
+                <stop offset="0.5" stopColor={pal.window} />
+                <stop offset="1" stopColor={pal.window} stopOpacity={0} />
               </linearGradient>
-              <radialGradient id={`${id}-key`} cx="0.62" cy="0.42" r="0.5">
-                <stop offset="0" stopColor="#FFD3A6" stopOpacity={0.22 * keyLight} />
-                <stop offset="0.7" stopColor="#FFD3A6" stopOpacity={0.06 * keyLight} />
+              <radialGradient id={`${id}-screen`} cx="0.5" cy="0.5" r="0.5">
+                <stop offset="0" stopColor={pal.screen} stopOpacity={0.8 * screenGlow} />
+                <stop offset="0.55" stopColor={pal.screen} stopOpacity={0.55 * screenGlow} />
+                <stop offset="1" stopColor={pal.screen} stopOpacity={0} />
+              </radialGradient>
+              {/* Figure tone: darkest on the far side, lifted where the screen light reaches. */}
+              <linearGradient id={`${id}-fig`} gradientUnits="userSpaceOnUse" x1="120" y1="0" x2="300" y2="0">
+                <stop offset="0" stopColor={pal.figure} />
+                <stop offset="0.55" stopColor={pal.figure} />
+                <stop offset="1" stopColor={figureLit} />
+              </linearGradient>
+              <radialGradient id={`${id}-key`} gradientUnits="userSpaceOnUse" cx="248" cy="200" r="88">
+                <stop offset="0" stopColor="#FFD3A6" stopOpacity={0.46 * key} />
+                <stop offset="0.6" stopColor="#FFD3A6" stopOpacity={0.16 * key} />
                 <stop offset="1" stopColor="#FFD3A6" stopOpacity={0} />
               </radialGradient>
-              <filter id={`${id}-keysoft`} colorInterpolationFilters="sRGB" x="-20%" y="-20%" width="140%" height="140%">
-                <feGaussianBlur stdDeviation={6 / f.scale} />
-              </filter>
-              {/* Organic edge: breaks the perfect vector outline so it reads as a photographed figure. */}
-              <filter id={`${id}-soft`} colorInterpolationFilters="sRGB" x="-10%" y="-10%" width="120%" height="120%">
-                <feTurbulence type="fractalNoise" baseFrequency="0.045" numOctaves={2} seed={4} result="noise" />
-                <feDisplacementMap in="SourceGraphic" in2="noise" scale={3.2} xChannelSelector="R" yChannelSelector="G" result="displaced" />
-                <feGaussianBlur in="displaced" stdDeviation={(1.6 + blur) / f.scale} />
-              </filter>
-              {/* Rim light from the screen on his right-facing edge — thin, scale-aware. */}
-              <filter id={`${id}-rim`} colorInterpolationFilters="sRGB" x="-10%" y="-10%" width="120%" height="120%">
-                <feTurbulence type="fractalNoise" baseFrequency="0.045" numOctaves={2} seed={4} result="noise" />
-                <feDisplacementMap in="SourceAlpha" in2="noise" scale={3.2} xChannelSelector="R" yChannelSelector="G" result="alpha" />
-                <feOffset in="alpha" dx={-5 / f.scale} dy={1.5 / f.scale} result="shifted" />
+              <radialGradient id={`${id}-keyspill`} gradientUnits="userSpaceOnUse" cx="300" cy="390" r="90">
+                <stop offset="0" stopColor="#FFD3A6" stopOpacity={0.22 * key} />
+                <stop offset="1" stopColor="#FFD3A6" stopOpacity={0} />
+              </radialGradient>
+              {/*
+                One filter for the whole figure (one noise pass): an organic, photographed edge;
+                a directional rim of screen light on the edges that face the screen (dx only, so
+                the back of his head stays dark); and a soft light-wrap onto the face plane.
+              */}
+              <filter id={`${id}-figure`} colorInterpolationFilters="sRGB" x="-10%" y="-10%" width="120%" height="120%">
+                <feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves={2} seed={4} result="noise" />
+                <feDisplacementMap in="SourceGraphic" in2="noise" scale={3.4} xChannelSelector="R" yChannelSelector="G" result="displaced" />
+                <feGaussianBlur in="displaced" stdDeviation={(1.4 + blur) / f.scale} result="body" />
+                <feColorMatrix in="displaced" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0" result="alpha" />
+                <feOffset in="alpha" dx={-7 / f.scale} dy={0} result="shifted" />
                 <feComposite in="alpha" in2="shifted" operator="out" result="edge" />
-                <feGaussianBlur in="edge" stdDeviation={2.2 / f.scale} result="edgeBlur" />
-                <feFlood floodColor={pal.screen} floodOpacity={Math.max(0, (0.3 + 0.35 * screenGlow * (1 - light.exposure * 0.5)) * (1 - Math.min(1, keyLight) * 0.4))} />
-                <feComposite in2="edgeBlur" operator="in" />
+                <feGaussianBlur in="edge" stdDeviation={1.8 / f.scale} result="edgeSoft" />
+                <feFlood floodColor={pal.screen} floodOpacity={rimOpacity} />
+                <feComposite in2="edgeSoft" operator="in" result="rim" />
+                <feOffset in="alpha" dx={-22 / f.scale} dy={0} result="shiftedWide" />
+                <feComposite in="alpha" in2="shiftedWide" operator="out" result="wrapEdge" />
+                <feGaussianBlur in="wrapEdge" stdDeviation={9 / f.scale} result="wrapSoft" />
+                <feComposite in="wrapSoft" in2="alpha" operator="in" result="wrapIn" />
+                <feFlood floodColor={pal.screen} floodOpacity={rimOpacity * 0.28} />
+                <feComposite in2="wrapIn" operator="in" result="wrap" />
+                <feMerge>
+                  <feMergeNode in="body" />
+                  <feMergeNode in="wrap" />
+                  <feMergeNode in="rim" />
+                </feMerge>
               </filter>
-              <filter id={`${id}-bokeh`} colorInterpolationFilters="sRGB" x="-30%" y="-30%" width="160%" height="160%">
-                <feGaussianBlur stdDeviation="38" />
+              <filter id={`${id}-keysoft`} colorInterpolationFilters="sRGB" x="-30%" y="-30%" width="160%" height="160%">
+                <feGaussianBlur stdDeviation={8 / f.scale} />
               </filter>
               <clipPath id={`${id}-clip`}>
                 <path d={PROFILE_HEAD} />
                 <path d={PROFILE_TORSO} />
                 <path d={PROFILE_HAIR} />
+                <path d={PROFILE_COLLAR} />
               </clipPath>
             </defs>
 
             {/* Room behind him, out of focus */}
             <rect width="1920" height="1080" fill={`url(#${id}-wall)`} />
-            <g filter={`url(#${id}-bokeh)`}>
-              <rect x="120" y="-100" width="70" height="1300" fill={pal.window} />
-              <rect x="260" y="-100" width="36" height="1300" fill={pal.window} />
-              {/* the screen he is looking at, just off-frame right */}
-              <rect x="1780" y="180" width="420" height="640" rx="20" fill={pal.screen} opacity={0.75 * screenGlow} />
-            </g>
+            <rect x="40" y="0" width="230" height="1080" fill={`url(#${id}-window)`} />
+            <rect x="230" y="0" width="120" height="1080" fill={`url(#${id}-window)`} opacity={0.6} />
+            <ellipse cx="2000" cy="500" rx="420" ry="460" fill={`url(#${id}-screen)`} />
             <rect width="1920" height="1080" fill={`url(#${id}-spill)`} />
 
             <g transform={`translate(${f.x} ${f.y}) scale(${f.scale})`}>
-              <g filter={`url(#${id}-soft)`}>
+              <g filter={`url(#${id}-figure)`}>
                 <path d={PROFILE_TORSO} fill={`url(#${id}-fig)`} />
                 <path d={PROFILE_HEAD} fill={`url(#${id}-fig)`} />
                 <path d={PROFILE_HAIR} fill={`url(#${id}-fig)`} />
+                <path d={PROFILE_COLLAR} fill={`url(#${id}-fig)`} />
               </g>
-              {keyLight > 0 ? (
-                <g clipPath={`url(#${id}-clip)`} filter={`url(#${id}-keysoft)`}>
-                  <ellipse cx={245} cy={215} rx={120} ry={150} fill={`url(#${id}-key)`} />
-                </g>
-              ) : null}
-              <g filter={`url(#${id}-rim)`} opacity={blur > 4 ? 0.5 : 1}>
-                <path d={PROFILE_TORSO} fill="#000" />
-                <path d={PROFILE_HEAD} fill="#000" />
-                <path d={PROFILE_HAIR} fill="#000" />
+              <g clipPath={`url(#${id}-clip)`}>
+                {/* ear and collar: barely-there tonal detail, not drawn features */}
+                <path d={PROFILE_EAR} stroke={figureLit} strokeWidth={2.2} fill="none" opacity={0.5} filter={`url(#${id}-keysoft)`} />
+                <path d="M206 300 C214 314 224 326 233 332" stroke={figureLit} strokeWidth={1.6} fill="none" opacity={0.45} />
+                {key > 0 ? (
+                  <g filter={`url(#${id}-keysoft)`}>
+                    <ellipse cx={252} cy={204} rx={78} ry={104} fill={`url(#${id}-key)`} />
+                    <ellipse cx={300} cy={392} rx={96} ry={70} fill={`url(#${id}-keyspill)`} />
+                  </g>
+                ) : null}
               </g>
             </g>
           </svg>
@@ -169,8 +198,8 @@ export const HeroShot: React.FC<{
             left: 40,
             top: 40,
             fontFamily: fonts.mono,
-            fontSize: 12,
-            letterSpacing: '0.14em',
+            fontSize: 18,
+            letterSpacing: '0.12em',
             color: pal.tone === 'light' ? colors.mutedOnLight : colors.mutedOnDark,
             border: `1px dashed ${pal.tone === 'light' ? colors.faintOnLight : colors.faintOnDark}`,
             padding: '5px 9px',

@@ -20,6 +20,8 @@ export type Campaign = {
   sector: string;
   /** Story number in the series (1 → "Story 01"). */
   storyNumber: number;
+  /** Word before the number on the end card ("Story"). */
+  storyLabel: string;
   /** Optional end-card tagline (null hides it). */
   tagline: string | null;
   /** Optional approved logo file inside public/ (null = no logo). */
@@ -41,6 +43,11 @@ export type Employee = {
   photo: string | null;
   /** Point of interest in the photo (0…1), keeps the face framed in every crop. */
   focalPoint: { x: number; y: number };
+  /**
+   * Optional over-the-shoulder photo (behind him, his shoulder and the back of his head,
+   * screen in front). Used for the foreground of the workspace shots; null = placeholder.
+   */
+  backPhoto: string | null;
 };
 
 /** Small system labels used by the draft composition and shared UI. */
@@ -77,8 +84,8 @@ export type BeforeStep = {
  * generic, never put names, dates, counts or product names on props, and have it approved.
  */
 export type BeforeArtifacts = {
-  form: { title: string; fields: string[]; signatureLabel: string };
-  email: { to: string; subject: string; preview: string };
+  form: { kicker: string; title: string; fields: string[]; signatureLabel: string };
+  email: { toLabel: string; to: string; subject: string; preview: string };
   followUp: { subject: string; message: string };
   system: { name: string; title: string; fields: Array<{ label: string; value: string }>; tag: string };
   records: { buckets: string[]; fileName: string };
@@ -251,8 +258,11 @@ export type TimelineScene = {
   /** Composition id used when the scene is previewed on its own. */
   previewId: string;
   durationInFrames: number;
-  /** How the scene enters: a hard cut (default) or a short cross-dissolve of N frames. */
-  transitionIn: { type: 'cut' } | { type: 'fade'; frames: number };
+  /**
+   * How the scene enters: a hard cut (default), a short cross-dissolve, or a dip — out to a
+   * colour and back in — which never double-exposes two shots (use it between two faces).
+   */
+  transitionIn: { type: 'cut' } | { type: 'fade'; frames: number } | { type: 'dip'; frames: number; color: string };
 };
 
 export type Timeline = {

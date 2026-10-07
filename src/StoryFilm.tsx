@@ -1,6 +1,6 @@
 import React from 'react';
 import { AbsoluteFill, Audio, Sequence, staticFile } from 'remotion';
-import { TransitionSeries, linearTiming } from '@remotion/transitions';
+import { TransitionSeries, linearTiming, type TransitionPresentation, type TransitionPresentationComponentProps } from '@remotion/transitions';
 import { fade } from '@remotion/transitions/fade';
 import { colors } from './campaign/theme';
 import { ease } from './campaign/motion';
@@ -15,6 +15,22 @@ export type StoryFilmProps = {
   storyKey: StoryKey;
   mode: RenderMode;
 };
+
+/**
+ * Dip: the outgoing shot fades to a colour over the first half, the incoming shot fades up
+ * from it over the second half — no frame ever shows both shots at once.
+ */
+type DipProps = { color: string };
+const DipPresentation: React.FC<TransitionPresentationComponentProps<DipProps>> = ({ children, presentationDirection, presentationProgress, passedProps }) => {
+  const entering = presentationDirection === 'entering';
+  const opacity = entering ? Math.max(0, presentationProgress * 2 - 1) : Math.max(0, 1 - presentationProgress * 2);
+  return (
+    <AbsoluteFill style={{ backgroundColor: entering ? 'transparent' : passedProps.color }}>
+      <AbsoluteFill style={{ opacity }}>{children}</AbsoluteFill>
+    </AbsoluteFill>
+  );
+};
+const dip = (color: string): TransitionPresentation<DipProps> => ({ component: DipPresentation, props: { color } });
 
 /** Optional music bed + cue sounds. Renders nothing until files are set in the story config. */
 const StoryAudio: React.FC<{ storyKey: StoryKey }> = ({ storyKey }) => {
@@ -47,12 +63,13 @@ export const StoryFilm: React.FC<StoryFilmProps> = ({ storyKey, mode }) => {
           {timeline.scenes.flatMap((scene, i) => {
             const Scene = sceneTemplates[scene.id];
             const items = [];
-            if (i > 0 && scene.transitionIn.type === 'fade') {
+            const t = scene.transitionIn;
+            if (i > 0 && t.type !== 'cut') {
               items.push(
                 <TransitionSeries.Transition
                   key={`transition-${scene.id}`}
-                  presentation={fade()}
-                  timing={linearTiming({ durationInFrames: scene.transitionIn.frames, easing: ease.inOut })}
+                  presentation={(t.type === 'dip' ? dip(t.color) : fade()) as TransitionPresentation<Record<string, unknown>>}
+                  timing={linearTiming({ durationInFrames: t.frames, easing: t.type === 'dip' ? (x: number) => x : ease.inOut })}
                 />,
               );
             }

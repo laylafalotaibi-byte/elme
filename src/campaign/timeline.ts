@@ -1,6 +1,6 @@
 import type { Timeline, TimelineScene } from './types';
 
-const overlap = (scene: TimelineScene) => (scene.transitionIn.type === 'fade' ? scene.transitionIn.frames : 0);
+const overlap = (scene: TimelineScene) => (scene.transitionIn.type === 'cut' ? 0 : scene.transitionIn.frames);
 
 /** Total film length in frames: scenes overlap only during dissolves. */
 export const totalDuration = (timeline: Timeline) =>
@@ -28,8 +28,8 @@ export const validateTimeline = (timeline: Timeline): Timeline => {
     throw new Error(`Timeline is ${(total / 30).toFixed(1)} s — the campaign format is 60–75 s.`);
   }
   for (const scene of timeline.scenes) {
-    if (scene.transitionIn.type === 'fade' && (scene.transitionIn.frames < 6 || scene.transitionIn.frames > 20)) {
-      throw new Error(`Scene ${scene.id}: dissolves must be 6–20 frames.`);
+    if (scene.transitionIn.type !== 'cut' && (scene.transitionIn.frames < 6 || scene.transitionIn.frames > 20)) {
+      throw new Error(`Scene ${scene.id}: dissolves and dips must be 6–20 frames.`);
     }
   }
   return timeline;

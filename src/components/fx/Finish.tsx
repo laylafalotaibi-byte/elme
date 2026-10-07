@@ -1,7 +1,5 @@
-import React from 'react';
+import React, { useId } from 'react';
 import { AbsoluteFill, useCurrentFrame } from 'remotion';
-import { colors } from '../../campaign/theme';
-import { ease, progress } from '../../campaign/motion';
 
 /**
  * Film finish layers: animated grain, vignette and cinematic letterbox. Pure SVG/CSS.
@@ -14,14 +12,15 @@ import { ease, progress } from '../../campaign/motion';
 export const Grain: React.FC<{ opacity?: number }> = ({ opacity = 0.045 }) => {
   const frame = useCurrentFrame();
   const seed = [11, 37, 73, 97][Math.floor(frame / 3) % 4];
+  const id = `grain-${useId().replace(/:/g, '')}-${seed}`;
   return (
     <AbsoluteFill style={{ pointerEvents: 'none', mixBlendMode: 'overlay', opacity }}>
       <svg width="100%" height="100%" viewBox="0 0 960 540" preserveAspectRatio="none">
-        <filter id={`grain-${seed}`} x="0" y="0" width="100%" height="100%">
+        <filter id={id} x="0" y="0" width="100%" height="100%">
           <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves={2} seed={seed} stitchTiles="stitch" />
           <feColorMatrix type="saturate" values="0" />
         </filter>
-        <rect width="960" height="540" filter={`url(#grain-${seed})`} />
+        <rect width="960" height="540" filter={`url(#${id})`} />
       </svg>
     </AbsoluteFill>
   );
@@ -36,26 +35,6 @@ export const Vignette: React.FC<{ strength?: number; color?: string }> = ({ stre
     }}
   />
 );
-
-/** Cinematic letterbox bars that ease in/out. `amount` 0…1 maps to bar height. */
-export const Letterbox: React.FC<{ start: number; end?: number; height?: number; inDuration?: number; outDuration?: number }> = ({
-  start,
-  end,
-  height = 110,
-  inDuration = 30,
-  outDuration = 24,
-}) => {
-  const frame = useCurrentFrame();
-  const pin = progress(frame, start, inDuration, ease.inOut);
-  const pout = end === undefined ? 0 : progress(frame, end - outDuration, outDuration, ease.inOut);
-  const h = height * pin * (1 - pout);
-  return (
-    <AbsoluteFill style={{ pointerEvents: 'none' }}>
-      <div style={{ position: 'absolute', left: 0, right: 0, top: 0, height: h, background: colors.ink }} />
-      <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: h, background: colors.ink }} />
-    </AbsoluteFill>
-  );
-};
 
 /** Global finish applied over every composition. */
 export const FilmFinish: React.FC = () => (

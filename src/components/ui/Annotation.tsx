@@ -18,7 +18,9 @@ export const Annotation: React.FC<{
   /** Leader line end point relative to the chip's left-centre. */
   leader?: { x: number; y: number };
   busy?: boolean;
-}> = ({ text, x, y, start, exitAt, tone = 'dark', leader, busy = true }) => {
+  /** Use the accent signal dot (reserved for meaningful signals). Default: neutral. */
+  signal?: boolean;
+}> = ({ text, x, y, start, exitAt, tone = 'dark', leader, busy = true, signal = false }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   if (frame < start) return null;
@@ -42,7 +44,7 @@ export const Annotation: React.FC<{
       {leader ? (
         <svg style={{ position: 'absolute', left: 0, top: 0, overflow: 'visible' }} width={1} height={1}>
           <line x1={0} y1={0} x2={leader.x * lead} y2={leader.y * lead} stroke={c.faint} strokeWidth={1} />
-          {lead > 0.98 ? <circle cx={leader.x} cy={leader.y} r={2.5} fill={colors.accent} /> : null}
+          {lead > 0.98 ? <circle cx={leader.x} cy={leader.y} r={2.5} fill={c.muted} /> : null}
         </svg>
       ) : null}
       <div
@@ -59,7 +61,7 @@ export const Annotation: React.FC<{
           whiteSpace: 'nowrap',
         }}
       >
-        <Dot size={8} />
+        <Dot size={8} color={signal ? colors.accent : c.muted} />
         <span style={{ ...type.caption, fontSize: 22, color: c.text }}>{text}</span>
       </div>
     </div>

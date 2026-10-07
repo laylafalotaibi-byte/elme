@@ -27,7 +27,7 @@ export const storyNumberLabel = (n: number) => String(n).padStart(2, '0');
 const PACE = {
   rule: 30,
   wordStart: 2,
-  wordStagger: 3,
+  wordStagger: 2,
   wordDur: 18,
   /** Full stop, after the last word starts. */
   periodAfter: 8,
@@ -90,6 +90,8 @@ export const EndCard: React.FC<{ start?: number; tone?: Tone }> = ({ start = 0, 
             <span
               style={{
                 display: 'inline-block',
+                // the full stop is its own span (it lands last), so restore the Y–period kerning by hand
+                marginLeft: '-0.07em',
                 color: colors.accent,
                 opacity: Math.min(1, period * 2),
                 transform: `translateY(${(1 - period) * 18}px) scale(${0.6 + 0.4 * period})`,
@@ -126,7 +128,7 @@ export const EndCard: React.FC<{ start?: number; tone?: Tone }> = ({ start = 0, 
         <div style={{ height: 1, background: c.line, width: `${rule * 100}%` }} />
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 22, opacity: meta }}>
           <span style={{ fontFamily: fonts.sans, fontWeight: 600, fontSize: 30, letterSpacing: '-0.02em', color: c.text }}>
-            Story {storyNumberLabel(campaign.storyNumber)}
+            {campaign.storyLabel} {storyNumberLabel(campaign.storyNumber)}
           </span>
           {campaign.logo ? (
             <Img src={staticFile(campaign.logo)} style={{ height: 40, objectFit: 'contain' }} />

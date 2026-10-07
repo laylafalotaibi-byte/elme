@@ -16,15 +16,17 @@ const exitValues = (frame: number, exit?: ExitSpec) => {
   return { opacity: 1 - p, y: -0.18 * p };
 };
 
+/** Padding/margin pair that lets a masked line keep its descenders and italic overhang. */
+export const MASK_PADDING = { padding: '0.06em 0.12em 0.16em 0.04em', margin: '-0.06em -0.12em -0.16em -0.04em' } as const;
+
 /** Mask wrapper that leaves room for descenders and italic overhang. */
-const Mask: React.FC<{ children: React.ReactNode; style?: React.CSSProperties }> = ({ children, style }) => (
+export const Mask: React.FC<{ children: React.ReactNode; style?: React.CSSProperties }> = ({ children, style }) => (
   <span
     style={{
       display: 'inline-block',
       overflow: 'hidden',
       verticalAlign: 'top',
-      padding: '0.06em 0.12em 0.16em 0.04em',
-      margin: '-0.06em -0.12em -0.16em -0.04em',
+      ...MASK_PADDING,
       ...style,
     }}
   >
@@ -102,7 +104,3 @@ export const WordReveal: React.FC<{
     </span>
   );
 };
-
-/** Frame at which the last word of a WordReveal has fully landed. */
-export const wordRevealEnd = (text: string, start: number, stagger: number = staggers.word, duration: number = durations.word) =>
-  start + Math.max(0, richWords(text).length - 1) * stagger + duration;

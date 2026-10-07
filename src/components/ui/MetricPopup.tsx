@@ -42,7 +42,20 @@ export type MetricPopupProps = {
   align?: 'left' | 'right';
 };
 
-const Value: React.FC<{ metric: ResolvedMetric; size: number; color: string; muted: string; p: number }> = ({ metric, size, color, muted, p }) => {
+const TO_VERIFY_SIZE = 18;
+
+/**
+ * Height (px) of a pop-up's body as laid out by <MetricPopup> — label row, value row and
+ * the draft TO VERIFY row. Use it to place pop-ups above/below objects without guessing.
+ */
+export const metricPopupBodyHeight = (metric: ResolvedMetric, mode: 'final' | 'draft', valueSize = 56) => {
+  const label = metric.label ? 24 + 14 : -4;
+  const value = metric.kind === 'text' ? Math.round(valueSize * 0.74) : valueSize;
+  const verify = metric.status === 'placeholder' && mode === 'draft' ? 10 + TO_VERIFY_SIZE + 10 : 0;
+  return label + value + verify;
+};
+
+const Value: React.FC<{ metric: ResolvedMetric; size: number; color: string; muted: string; signal: string; p: number }> = ({ metric, size, color, muted, signal, p }) => {
   const rise = { transform: `translateY(${(1 - p) * 1}em)`, opacity: Math.min(1, p * 1.4), display: 'inline-flex', alignItems: 'center', gap: size * 0.28 };
   const mask: React.CSSProperties = { overflow: 'hidden', padding: '0.04em 0.1em 0.14em 0', margin: '-0.04em -0.1em -0.14em 0', display: 'block' };
   const valueStyle: React.CSSProperties = { ...type.metricValue, fontSize: size, color, whiteSpace: 'nowrap' };
@@ -52,7 +65,7 @@ const Value: React.FC<{ metric: ResolvedMetric; size: number; color: string; mut
       <div style={{ ...mask, fontSize: size }}>
         <span style={{ ...rise, ...valueStyle }}>
           <span style={{ color: muted }}>{metric.from}</span>
-          <ArrowRight size={size * 0.42} length={size * 0.75} color={colors.accent} strokeWidth={2} />
+          <ArrowRight size={size * 0.42} length={size * 0.75} color={signal} strokeWidth={2} />
           <span>{metric.to}</span>
         </span>
       </div>
@@ -62,7 +75,7 @@ const Value: React.FC<{ metric: ResolvedMetric; size: number; color: string; mut
   return (
     <div style={{ ...mask, fontSize: textSize }}>
       <span style={{ ...rise, ...valueStyle, fontSize: textSize, letterSpacing: metric.kind === 'text' ? '-0.02em' : valueStyle.letterSpacing }}>
-        {metric.direction ? <ArrowVertical direction={metric.direction} size={textSize * 0.62} /> : null}
+        {metric.direction ? <ArrowVertical direction={metric.direction} size={textSize * 0.62} color={signal} /> : null}
         <span>{metric.value}</span>
       </span>
     </div>
@@ -98,6 +111,8 @@ export const MetricPopup: React.FC<MetricPopupProps> = ({
 
   const isPlaceholder = metric.status === 'placeholder';
   const right = align === 'right';
+  // Orange belongs to the better way: impact arrows use it; BEFORE pain indicators stay neutral.
+  const signal = intent === 'before' ? c.muted : colors.accent;
   const originX = right ? width : 0;
 
   return (
@@ -105,10 +120,10 @@ export const MetricPopup: React.FC<MetricPopupProps> = ({
       {leader ? (
         <svg style={{ position: 'absolute', left: 0, top: 0, overflow: 'visible', pointerEvents: 'none' }} width={1} height={1}>
           <line x1={originX} y1={0} x2={originX + leader.x * lead} y2={leader.y * lead} stroke={c.faint} strokeWidth={1} />
-          {lead > 0.98 ? <circle cx={originX + leader.x} cy={leader.y} r={3} fill={intent === 'before' ? colors.accent : c.text} /> : null}
+          {lead > 0.98 ? <circle cx={originX + leader.x} cy={leader.y} r={3} fill={c.text} /> : null}
         </svg>
       ) : null}
-      <div style={{ position: 'absolute', [right ? 'right' : 'left']: 0, top: 0, color: intent === 'before' ? colors.accent : c.muted }}>
+      <div style={{ position: 'absolute', [right ? 'right' : 'left']: 0, top: 0, color: c.muted }}>
         <CornerBracket size={16} draw={bracket} color="currentColor" strokeWidth={1.5} mirror={right} />
       </div>
       <div style={{ [right ? 'paddingRight' : 'paddingLeft']: 28, paddingTop: 0, textAlign: right ? 'right' : 'left' }}>
@@ -116,12 +131,12 @@ export const MetricPopup: React.FC<MetricPopupProps> = ({
           <div style={{ ...type.label, color: c.muted, opacity: label, transform: `translateX(${(1 - label) * (right ? 6 : -6)}px)`, marginTop: -3 }}>{metric.label}</div>
         ) : null}
         <div style={{ marginTop: metric.label ? 14 : -4 }}>
-          <Value metric={metric} size={valueSize} color={c.text} muted={c.muted} p={value} />
+          <Value metric={metric} size={valueSize} color={c.text} muted={c.muted} signal={signal} p={value} />
         </div>
         {isPlaceholder && mode === 'draft' ? (
           <div style={{ display: 'flex', justifyContent: right ? 'flex-end' : 'flex-start', alignItems: 'center', gap: 10, marginTop: 10, opacity: value }}>
             <span style={{ height: 0, width: 120, borderTop: `1px dashed ${colors.accent}` }} />
-            <span style={{ fontFamily: fonts.mono, fontSize: 14, letterSpacing: '0.14em', color: colors.accent, border: `1px solid ${colors.accent}`, padding: '4px 8px' }}>
+            <span style={{ fontFamily: fonts.mono, fontSize: TO_VERIFY_SIZE, letterSpacing: '0.12em', color: colors.accent, border: `1px solid ${colors.accent}`, padding: '4px 8px' }}>
               {story.ui.toVerify}
             </span>
           </div>

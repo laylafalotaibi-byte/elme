@@ -3,8 +3,8 @@ import { validateTimeline } from '../../campaign/timeline';
 
 /**
  * STORY 01 — Timeline (30 fps)
- * Hard cuts by default; a short dissolve only where time passes. Film length =
- * Σ durations − Σ dissolve frames. Scene-internal beats are documented in
+ * Hard cuts by default. Into Scenes 09 and 10 a short dip (out to a colour and back) marks
+ * time passing without double-exposing his face. Film length = Σ durations − Σ dip frames. Scene-internal beats are documented in
  * docs/STORYBOARD.md and implemented in each scene template.
  */
 export const story01Timeline: Timeline = validateTimeline({
@@ -17,7 +17,7 @@ export const story01Timeline: Timeline = validateTimeline({
     { id: 'workflow', beat: 'BETTER WAY', previewId: 'S06-Workflow', durationInFrames: 210, transitionIn: { type: 'cut' } },
     { id: 'after', beat: 'BETTER WAY', previewId: 'S07-After', durationInFrames: 210, transitionIn: { type: 'cut' } },
     { id: 'impact', beat: 'IMPACT', previewId: 'S08-Impact', durationInFrames: 170, transitionIn: { type: 'cut' } },
-    { id: 'human', beat: 'PERSON', previewId: 'S09-Human', durationInFrames: 210, transitionIn: { type: 'fade', frames: 10 } },
-    { id: 'final', beat: 'IMPACT', previewId: 'S10-Final', durationInFrames: 330, transitionIn: { type: 'fade', frames: 10 } },
+    { id: 'human', beat: 'PERSON', previewId: 'S09-Human', durationInFrames: 210, transitionIn: { type: 'dip', frames: 10, color: '#E6DED2' } },
+    { id: 'final', beat: 'IMPACT', previewId: 'S10-Final', durationInFrames: 330, transitionIn: { type: 'dip', frames: 10, color: '#0B0C0E' } },
   ],
 });

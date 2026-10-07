@@ -1,6 +1,7 @@
 import React from 'react';
 import { colors, fonts, radii, shadows, toneColors, type, type Tone } from '../../../campaign/theme';
 import { Dot } from '../../glyphs/Glyphs';
+import { useStory } from '../../../campaign/StoryContext';
 
 /**
  * Email and follow-up artefacts. Generic, unbranded mail UI — no product chrome or logos.
@@ -24,11 +25,12 @@ export const EmailCard: React.FC<{
   style?: React.CSSProperties;
 }> = ({ to, subject, preview, from, attachment, unread = true, tone = 'dark', width = 440, style }) => {
   const c = toneColors(tone);
+  const toLabel = useStory().story.before.artifacts.email.toLabel;
   return (
     <div style={{ ...surface(tone), width, padding: '20px 22px', ...style }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-        {unread ? <Dot size={6} /> : null}
-        <span style={{ ...type.label, fontSize: 12, color: c.muted }}>{from ? `${from} · ${to}` : `To  ${to}`}</span>
+        {unread ? <Dot size={6} color={c.muted} /> : null}
+        <span style={{ ...type.label, fontSize: 12, color: c.muted }}>{from ? `${from} · ${to}` : `${toLabel}  ${to}`}</span>
       </div>
       <div style={{ ...type.body, fontWeight: 500, fontSize: 19, color: c.text, marginTop: 12, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
         {subject}
@@ -66,7 +68,7 @@ export const FollowUpPing: React.FC<{
   return (
     <div style={{ ...surface(tone), width, padding: '16px 18px', borderRadius: 14, ...style }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-        <Dot size={6} />
+        <Dot size={6} color={c.muted} />
         <span style={{ ...type.label, fontSize: 11, color: c.muted }}>{subject}</span>
       </div>
       <div style={{ ...type.body, fontSize: 19, color: c.text, marginTop: 10 }}>{message}</div>

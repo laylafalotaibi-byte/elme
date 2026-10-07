@@ -1,23 +1,51 @@
 import React from 'react';
+import { random } from 'remotion';
 import { colors, fonts, shadows, type } from '../../../campaign/theme';
+import { useStory } from '../../../campaign/StoryContext';
 
 /**
  * The paper "Device Handover Form": a physical sheet with handwritten field entries and a
  * signature line. `fill` (0…1) writes the field entries, `sign` (0…1) draws the signature.
  */
 
-// Abstract handwriting strokes (not legible on purpose — no invented data).
-const SCRIBBLES = [
-  'M0 10 C6 2 10 2 13 9 S20 15 25 7 S33 1 37 9 S45 14 50 8 S58 3 62 10 S70 13 76 7 S86 4 92 10',
-  'M0 9 C5 3 9 4 12 10 S19 14 23 6 S30 2 35 10 S44 13 48 6 S56 2 60 9',
-  'M0 8 C4 3 8 3 11 9 S16 14 22 8 S28 3 33 9 S40 14 46 8 S52 3 58 9 S66 13 72 7 S80 4 86 9 S94 12 100 8 S108 4 114 9',
-  'M0 10 C7 3 11 3 15 10 S22 14 28 7 S36 2 42 10 S50 13 56 7',
-  'M0 9 C5 2 9 3 12 9 L18 9 M24 4 L22 14 M30 9 C34 3 38 3 41 9 S47 14 52 8',
-];
+// Abstract handwriting (deliberately illegible — no invented data). Each field entry is a
+// few "words" of cursive-like loops with uneven x-height, slant and baseline, and a pen lift
+// between words. Seeded, so every render is identical.
+type Word = { d: string; len: number };
+
+const handwriting = (seed: string, width: number): Word[] => {
+  const words: Word[] = [];
+  let x = 2;
+  const wordCount = 2 + Math.floor(random(`${seed}-n`) * 2);
+  for (let w = 0; w < wordCount && x < width - 20; w++) {
+    const letters = 3 + Math.floor(random(`${seed}-w${w}`) * 5);
+    const baseline = 11 + (random(`${seed}-b${w}`) - 0.5) * 2.4;
+    let d = `M${x.toFixed(1)} ${baseline.toFixed(1)}`;
+    let len = 0;
+    for (let l = 0; l < letters; l++) {
+      const r = (k: string) => random(`${seed}-${w}-${l}-${k}`);
+      const h = 4.5 + r('h') * 5 + (r('tall') > 0.82 ? 5 : 0); // x-height, the odd ascender
+      const step = 4 + r('s') * 3.5;
+      const slant = 1.6 + r('sl') * 1.4;
+      const drift = (r('d') - 0.5) * 1.2;
+      const top = baseline - h;
+      d += ` C${(x + slant).toFixed(1)} ${top.toFixed(1)} ${(x + step * 0.55 + slant).toFixed(1)} ${top.toFixed(1)} ${(x + step * 0.6).toFixed(1)} ${(baseline - h * 0.35).toFixed(1)}`;
+      d += ` S${(x + step * 0.8).toFixed(1)} ${(baseline + 1.2 + drift).toFixed(1)} ${(x + step).toFixed(1)} ${(baseline + drift).toFixed(1)}`;
+      x += step;
+      len += step * 2.2 + h;
+    }
+    words.push({ d, len });
+    x += 5 + random(`${seed}-gap${w}`) * 5; // pen lift
+  }
+  return words;
+};
 
 export const SIGNATURE_PATH =
-  'M6 46 C18 12 30 6 34 30 C37 48 30 58 26 44 C22 30 44 10 52 26 C58 38 50 50 56 40 C62 30 68 22 74 34 C78 42 82 40 88 30 C94 20 100 22 102 34 C104 44 110 42 118 32 C126 22 134 26 140 36 C146 44 156 40 168 34 L196 28';
+  'M8 44 C14 20 22 9 28 17 C33 24 27 45 20 50 C15 54 18 40 27 33 C37 25 45 29 42 40 C41 46 47 44 53 35 ' +
+  'C57 29 61 30 60 38 C59 45 64 45 70 36 L77 27 C78 39 80 47 87 40 C93 33 96 23 103 26 C109 29 104 43 97 45 ' +
+  'C92 47 98 36 109 32 C121 28 128 35 137 30 C151 23 167 22 194 25';
 
+/** A signature with a little pen pressure: a main stroke plus a thinner offset pass. */
 export const Signature: React.FC<{ draw: number; width?: number; height?: number; color?: string; strokeWidth?: number }> = ({
   draw,
   width = 200,
@@ -26,17 +54,25 @@ export const Signature: React.FC<{ draw: number; width?: number; height?: number
   strokeWidth = 2.2,
 }) => (
   <svg width={width} height={height} viewBox="0 0 200 64" style={{ overflow: 'visible', display: 'block', opacity: draw > 0 ? 1 : 0 }}>
-    <path
-      d={SIGNATURE_PATH}
-      pathLength={1}
-      fill="none"
-      stroke={color}
-      strokeWidth={strokeWidth}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeDasharray={1}
-      strokeDashoffset={1 - draw}
-    />
+    {[
+      { w: strokeWidth, o: 1, dx: 0, dy: 0 },
+      { w: strokeWidth * 0.55, o: 0.55, dx: 0.9, dy: 0.7 },
+    ].map((pass, i) => (
+      <path
+        key={i}
+        d={SIGNATURE_PATH}
+        transform={`translate(${pass.dx} ${pass.dy})`}
+        pathLength={1}
+        fill="none"
+        stroke={color}
+        strokeWidth={pass.w}
+        strokeOpacity={pass.o}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeDasharray={1}
+        strokeDashoffset={1 - draw}
+      />
+    ))}
   </svg>
 );
 
@@ -47,9 +83,14 @@ export const PaperForm: React.FC<{
   fill?: number;
   sign?: number;
   width?: number;
+  /** Small label above the title; defaults to the story config's form kicker. */
+  kicker?: string;
+  /** Changes the handwriting (e.g. a different person's form at another site). */
+  variant?: number;
   style?: React.CSSProperties;
-}> = ({ title, fields, signatureLabel, fill = 1, sign = 0, width = 360, style }) => {
+}> = ({ title, fields, signatureLabel, fill = 1, sign = 0, width = 360, kicker, variant = 0, style }) => {
   const ink = '#24304A';
+  const { story } = useStory();
   return (
     <div
       style={{
@@ -64,7 +105,7 @@ export const PaperForm: React.FC<{
       }}
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <span style={{ ...type.label, fontSize: 10, color: colors.mutedOnLight }}>Form</span>
+        <span style={{ ...type.label, fontSize: 10, color: colors.mutedOnLight }}>{kicker ?? story.before.artifacts.form.kicker}</span>
         <span style={{ width: 34, height: 34, borderRadius: 2, boxShadow: `inset 0 0 0 1px ${colors.stoneLine}` }} />
       </div>
       <div style={{ fontFamily: fonts.sans, fontWeight: 600, fontSize: 22, letterSpacing: '-0.01em', marginTop: 10 }}>{title}</div>
@@ -76,17 +117,27 @@ export const PaperForm: React.FC<{
             <div style={{ ...type.label, fontSize: 10, letterSpacing: '0.12em', color: colors.mutedOnLight }}>{field}</div>
             <div style={{ position: 'relative', height: 22, borderBottom: `1px solid ${colors.stoneLine}` }}>
               <svg width="100%" height={20} viewBox="0 0 160 16" preserveAspectRatio="xMinYMid meet" style={{ position: 'absolute', left: 4, bottom: 2, overflow: 'visible' }}>
-                <path
-                  d={SCRIBBLES[i % SCRIBBLES.length]}
-                  pathLength={1}
-                  fill="none"
-                  stroke={ink}
-                  strokeWidth={1.4}
-                  strokeLinecap="round"
-                  strokeDasharray={1}
-                  strokeDashoffset={1 - local}
-                  opacity={local > 0 ? 0.85 : 0}
-                />
+                {(() => {
+                  const words = handwriting(`${title}-${field}-${variant}`, 150);
+                  return words.map((word, k) => {
+                    const p = Math.max(0, Math.min(1, local * words.length - k));
+                    return (
+                      <path
+                        key={k}
+                        d={word.d}
+                        pathLength={1}
+                        fill="none"
+                        stroke={ink}
+                        strokeWidth={1.3}
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeDasharray={1}
+                        strokeDashoffset={1 - p}
+                        opacity={p > 0 ? 0.85 : 0}
+                      />
+                    );
+                  });
+                })()}
               </svg>
             </div>
           </div>

@@ -15,9 +15,6 @@ export const parseRich = (text: string): Segment[] => {
     .filter((s) => s.text.length > 0);
 };
 
-/** Plain text with the emphasis markers removed. */
-export const plainText = (text: string) => text.replace(/\*/g, '');
-
 export type EmphasisStyle = 'serif' | 'serifAccent' | 'accent' | 'none';
 
 export const emphasisStyle = (style: EmphasisStyle): React.CSSProperties => {

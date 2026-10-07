@@ -39,11 +39,3 @@ const worldStyle: Record<WorldKind, React.CSSProperties> = {
 export const World: React.FC<{ kind: WorldKind; opacity?: number; style?: React.CSSProperties }> = ({ kind, opacity = 1, style }) => (
   <AbsoluteFill style={{ ...worldStyle[kind], opacity, ...style }} />
 );
-
-/** Cross-fades between two worlds; `mix` 0 = from, 1 = to. */
-export const WorldBlend: React.FC<{ from: WorldKind; to: WorldKind; mix: number }> = ({ from, to, mix }) => (
-  <AbsoluteFill>
-    <World kind={from} />
-    <World kind={to} opacity={mix} />
-  </AbsoluteFill>
-);

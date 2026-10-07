@@ -47,7 +47,7 @@ export const SystemWindow: React.FC<{
           <span style={{ ...type.label, fontSize: 12, color: c.text }}>{name}</span>
           <span style={{ ...type.small, fontSize: 14, color: c.muted }}>{title}</span>
         </div>
-        <span style={{ fontFamily: fonts.mono, fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: colors.accent }}>{tag}</span>
+        <span style={{ fontFamily: fonts.mono, fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: c.muted }}>{tag}</span>
       </div>
       <div style={{ padding: '18px 18px 20px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px 16px' }}>
         {fields.map((field) => {
@@ -64,7 +64,7 @@ export const SystemWindow: React.FC<{
                   marginTop: 7,
                   height: 36,
                   borderRadius: 6,
-                  boxShadow: `inset 0 0 0 1px ${typingHere ? colors.accent : c.line}`,
+                  boxShadow: `inset 0 0 0 ${typingHere ? 1.5 : 1}px ${typingHere ? c.muted : c.line}`,
                   display: 'flex',
                   alignItems: 'center',
                   padding: '0 12px',

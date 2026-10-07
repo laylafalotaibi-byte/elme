@@ -1,7 +1,9 @@
-import React from 'react';
-import { AbsoluteFill } from 'remotion';
+import React, { useId } from 'react';
+import { AbsoluteFill, Img, interpolateColors, staticFile } from 'remotion';
+import { colors, fonts } from '../../campaign/theme';
+import { useStory } from '../../campaign/StoryContext';
 import { roomPalette, type Light } from '../../campaign/light';
-import { OTS_FIGURE } from '../portrait/silhouettes';
+import { OTS_COLLAR, OTS_FIGURE } from '../portrait/silhouettes';
 
 /**
  * Workspace — the over-the-shoulder shot. Foreground: his shoulder and the back of his
@@ -22,14 +24,6 @@ export const SCREEN_RECT = {
 } as const;
 export const SCREEN_SCALE = SCREEN_RECT.w / SCREEN_CANVAS.w;
 export const DESK_STRIP = { y: 872, h: 1080 - 872 } as const;
-
-/** Camera keys (for <Camera>) that frame a rectangle of the 1920×1080 workspace. */
-export const frameOn = (rect: { x: number; y: number; w: number; h: number }, padding = 1) => {
-  const scale = Math.min(1920 / rect.w, 1080 / rect.h) * padding;
-  const cx = rect.x + rect.w / 2;
-  const cy = rect.y + rect.h / 2;
-  return { scale, x: (960 - cx) * scale, y: (540 - cy) * scale };
-};
 
 /** The monitor's tilt, applied about its left-centre (see the monitor <div> below). */
 const MONITOR_PERSPECTIVE = 2600;
@@ -67,6 +61,10 @@ export const Workspace: React.FC<{
   style?: React.CSSProperties;
 }> = ({ light, screen, desk, figure = true, focus = 'screen', flash = 0, screenColor, style }) => {
   const pal = roomPalette(light);
+  const { story, mode } = useStory();
+  const uid = `ots-${useId().replace(/:/g, '')}`;
+  const backPhoto = story.employee.backPhoto;
+  const figureLit = interpolateColors(0.1 + light.exposure * 0.06, [0, 1], [pal.figure, pal.screen]);
   const screenBlur = focus === 'screen' ? 0 : focus === 'desk' ? 3 : 6;
   const figureBlur = focus === 'figure' ? 1.5 : 11;
   const dimness = 1 - light.exposure;
@@ -204,28 +202,61 @@ export const Workspace: React.FC<{
       {desk ? <AbsoluteFill style={{ filter: focus === 'desk' ? undefined : 'blur(1.5px)' }}>{desk}</AbsoluteFill> : null}
 
       {/* Foreground: his shoulder and the back of his head */}
-      {figure ? (
+      {figure && backPhoto ? (
+        // An approved over-the-shoulder photo (employee.backPhoto), kept out of focus like the placeholder.
+        <Img
+          src={staticFile(backPhoto)}
+          style={{
+            position: 'absolute',
+            left: -190,
+            top: 452,
+            width: 920,
+            height: 700,
+            objectFit: 'cover',
+            filter: `blur(${figureBlur}px) grayscale(0.9) brightness(${0.35 + light.exposure * 0.45})`,
+          }}
+        />
+      ) : figure ? (
         <svg
           viewBox="0 0 920 700"
           style={{ position: 'absolute', left: -190, top: 452, width: 920, height: 700, overflow: 'visible', filter: `blur(${figureBlur}px)` }}
         >
           <defs>
-            <linearGradient id="ots-fig" x1="0" y1="0" x2="1" y2="0.3">
+            <linearGradient id={`${uid}-fig`} x1="0" y1="0" x2="1" y2="0.3">
               <stop offset="0" stopColor={pal.figure} />
-              <stop offset="0.8" stopColor={pal.figure} />
-              <stop offset="1" stopColor={pal.desk} />
+              <stop offset="0.7" stopColor={pal.figure} />
+              <stop offset="1" stopColor={figureLit} />
             </linearGradient>
-            <filter id="ots-rim" x="-10%" y="-10%" width="120%" height="120%" colorInterpolationFilters="sRGB">
-              <feOffset in="SourceAlpha" dx="-9" dy="3" result="shifted" />
+            {/* Screen light on the edges that face the monitor (his ear, jaw, shoulder line). */}
+            <filter id={`${uid}-rim`} x="-10%" y="-10%" width="120%" height="120%" colorInterpolationFilters="sRGB">
+              <feOffset in="SourceAlpha" dx="-12" dy="2" result="shifted" />
               <feComposite in="SourceAlpha" in2="shifted" operator="out" result="edge" />
-              <feGaussianBlur in="edge" stdDeviation="3" result="edgeBlur" />
-              <feFlood floodColor={pal.screen} floodOpacity={0.25 + dimness * 0.45 + flash * 0.3} />
+              <feGaussianBlur in="edge" stdDeviation="3.5" result="edgeBlur" />
+              <feFlood floodColor={pal.screen} floodOpacity={0.3 + dimness * 0.45 + flash * 0.3} />
               <feComposite in2="edgeBlur" operator="in" />
             </filter>
           </defs>
-          <path d={OTS_FIGURE} fill="url(#ots-fig)" />
-          <path d={OTS_FIGURE} fill="#000" filter="url(#ots-rim)" />
+          <path d={OTS_FIGURE} fill={`url(#${uid}-fig)`} />
+          <path d={OTS_COLLAR} stroke={figureLit} strokeWidth={6} fill="none" opacity={0.5} />
+          <path d={OTS_FIGURE} fill="#000" filter={`url(#${uid}-rim)`} />
         </svg>
+      ) : null}
+      {figure && !backPhoto && mode === 'draft' ? (
+        <div
+          style={{
+            position: 'absolute',
+            left: 40,
+            bottom: 40,
+            fontFamily: fonts.mono,
+            fontSize: 18,
+            letterSpacing: '0.12em',
+            color: pal.tone === 'light' ? colors.mutedOnLight : colors.mutedOnDark,
+            border: `1px dashed ${pal.tone === 'light' ? colors.faintOnLight : colors.faintOnDark}`,
+            padding: '5px 9px',
+          }}
+        >
+          {story.ui.photoPlaceholder}
+        </div>
       ) : null}
     </AbsoluteFill>
   );

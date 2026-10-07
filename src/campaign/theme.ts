@@ -19,7 +19,6 @@ export const colors = {
   warmDark: '#1C1814',
   paper: '#F3F1EC',
   paperRaised: '#FBFAF7',
-  stone: '#E4DFD6',
   stoneLine: 'rgba(20,21,22,0.12)',
   textOnDark: '#F2F0EB',
   mutedOnDark: '#8D9199',
@@ -71,13 +70,10 @@ export const layout = {
   marginX: 160,
   marginY: 120,
   gutter: 32,
-  /** x position of column n (0-based) on a 12-col grid inside the margins */
-  col: (n: number) => 160 + n * ((1920 - 320 + 32) / 12),
 } as const;
 
 export const radii = {
   card: 10,
-  chip: 999,
   window: 12,
 } as const;
 
