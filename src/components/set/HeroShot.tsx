@@ -22,6 +22,9 @@ const FRAMING: Record<HeroFraming, { scale: number; x: number; y: number }> = {
   close: { scale: 3.3, x: -120, y: -110 },
 };
 
+/** How much tighter the 'close' framing crops an approved photo. */
+const PHOTO_CLOSE_SCALE = 1.45;
+
 /** Text-safe region for each framing (right of the face). */
 export const HERO_TEXT_SAFE: Record<HeroFraming, { x: number; y: number; w: number; h: number }> = {
   medium: { x: 860, y: 140, w: 900, h: 800 },
@@ -52,7 +55,13 @@ export const HeroShot: React.FC<{
 
   return (
     <AbsoluteFill style={{ overflow: 'hidden', backgroundColor: pal.wall, ...style }}>
-      <AbsoluteFill style={{ transform: `scale(${zoom})`, transformOrigin: '35% 45%' }}>
+      <AbsoluteFill
+        style={{
+          // A real photo has no separate close-up, so 'close' tightens around the focal point.
+          transform: `scale(${zoom * (photo && framing === 'close' ? PHOTO_CLOSE_SCALE : 1)})`,
+          transformOrigin: photo ? `${focalPoint.x * 100}% ${focalPoint.y * 100}%` : '35% 45%',
+        }}
+      >
         {photo ? (
           <>
             <Img

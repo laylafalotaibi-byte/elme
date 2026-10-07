@@ -5,6 +5,7 @@ import { loadCampaignFonts } from './campaign/fonts';
 import { totalDuration } from './campaign/timeline';
 import { ScenePreview, StoryFilm } from './StoryFilm';
 import { ComponentLab } from './lab/ComponentLab';
+import { PhotoLab } from './lab/PhotoLab';
 import { stories } from './stories';
 
 loadCampaignFonts();
@@ -50,6 +51,7 @@ export const RemotionRoot: React.FC = () => (
       ))}
     </Folder>
     <Folder name="Lab">
+      <Composition id="Lab-Photo" component={PhotoLab} durationInFrames={40} fps={VIDEO.fps} width={VIDEO.width} height={VIDEO.height} />
       <Composition id="Lab-Components" component={ComponentLab} durationInFrames={270} fps={VIDEO.fps} width={VIDEO.width} height={VIDEO.height} />
     </Folder>
   </>
