@@ -1,10 +1,11 @@
 import React from 'react';
-import { AbsoluteFill } from 'remotion';
+import { AbsoluteFill, Audio, Sequence, staticFile } from 'remotion';
 import { TransitionSeries, linearTiming } from '@remotion/transitions';
 import { fade } from '@remotion/transitions/fade';
 import { colors } from './campaign/theme';
 import { ease } from './campaign/motion';
 import { StoryProvider } from './campaign/StoryContext';
+import { sceneStarts } from './campaign/timeline';
 import type { RenderMode, SceneId } from './campaign/types';
 import { FilmFinish } from './components/fx/Finish';
 import { sceneTemplates } from './scenes';
@@ -15,7 +16,28 @@ export type StoryFilmProps = {
   mode: RenderMode;
 };
 
-/** A full story: every scene of the timeline, joined by cross-dissolves, with the film finish on top. */
+/** Optional music bed + cue sounds. Renders nothing until files are set in the story config. */
+const StoryAudio: React.FC<{ storyKey: StoryKey }> = ({ storyKey }) => {
+  const { story, timeline } = stories[storyKey];
+  const starts = sceneStarts(timeline);
+  return (
+    <>
+      {story.audio.music ? <Audio src={staticFile(story.audio.music)} volume={story.audio.musicVolume} /> : null}
+      {story.audio.cues
+        .filter((cue) => cue.file)
+        .map((cue, i) => {
+          const start = (starts.find((s) => s.id === cue.scene)?.start ?? 0) + cue.frame;
+          return (
+            <Sequence key={i} from={start} layout="none">
+              <Audio src={staticFile(cue.file as string)} volume={cue.volume ?? 1} />
+            </Sequence>
+          );
+        })}
+    </>
+  );
+};
+
+/** A full story: every scene of the timeline (hard cuts or short dissolves) + the film finish. */
 export const StoryFilm: React.FC<StoryFilmProps> = ({ storyKey, mode }) => {
   const { story, metrics, timeline } = stories[storyKey];
   return (
@@ -25,12 +47,12 @@ export const StoryFilm: React.FC<StoryFilmProps> = ({ storyKey, mode }) => {
           {timeline.scenes.flatMap((scene, i) => {
             const Scene = sceneTemplates[scene.id];
             const items = [];
-            if (i > 0 && scene.transitionIn > 0) {
+            if (i > 0 && scene.transitionIn.type === 'fade') {
               items.push(
                 <TransitionSeries.Transition
                   key={`transition-${scene.id}`}
                   presentation={fade()}
-                  timing={linearTiming({ durationInFrames: scene.transitionIn, easing: ease.inOut })}
+                  timing={linearTiming({ durationInFrames: scene.transitionIn.frames, easing: ease.inOut })}
                 />,
               );
             }
@@ -43,6 +65,7 @@ export const StoryFilm: React.FC<StoryFilmProps> = ({ storyKey, mode }) => {
           })}
         </TransitionSeries>
         <FilmFinish />
+        <StoryAudio storyKey={storyKey} />
       </AbsoluteFill>
     </StoryProvider>
   );

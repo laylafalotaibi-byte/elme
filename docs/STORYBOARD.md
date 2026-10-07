@@ -1,263 +1,253 @@
-# Story 01 — Storyboard
+# Story 01 — Storyboard (v2)
 
 **Campaign:** We Found A Better Way · Corporate Technology
 **Story:** Device handover & asset registration
-**Hero:** a junior IT Support employee (name, title and photo are placeholders in `src/stories/story01/story.config.ts`)
-**Format:** 1920×1080 · 16:9 · 30 fps · ≈72 s (2,173 frames)
+**Hero:** a junior IT Support employee (name / photo are config placeholders — `src/stories/story01/story.config.ts`)
+**Format:** 1920×1080 · 16:9 · 30 fps · **75.0 s (2,250 frames)**
 **Arc:** PERSON → PROBLEM → FRUSTRATION → QUESTION → LEARNING → SOLUTION → BEFORE/AFTER → IMPACT
 **Campaign DNA:** PERSON → PROBLEM → INITIATIVE → BETTER WAY → IMPACT
 
-> The employee is the hero. The automation is the enabler.
-> The problem is the process, never the person.
+> The employee is the hero. The automation is the enabler. The problem is the process, never the person.
 
-All copy below is taken verbatim from the brief. No metric values are invented: every
-number is an editable placeholder (`[X]`) that falls back to approved qualitative wording
-until a verified value is supplied (see *Metric pop-up* in `DESIGN_SYSTEM.md`).
+**Copy rule.** All *story* copy (lines, annotations, indicators, step names, before/after
+items, end card) is verbatim from `docs/BRIEF.md`. A small amount of *prop microcopy* is
+added (the request notification, email subjects, form field names, the after status line);
+it is generic, lives in `story.config.ts`, and is flagged there for approval.
+**Number rule.** No number appears on screen unless it is entered as verified (with a source)
+in `metrics.config.ts`. Props carry no dates, times, counts, badges or multipliers.
+
+> **What changed from v1** (after an adversarial review for fact fidelity, creative direction
+> and timing): the hero is no longer a portrait card but is filmed with a shot / reverse-shot
+> grammar; light (not a dark/light theme switch) carries the emotional arc; hard cuts replace
+> blanket dissolves; Scene 07 is a match cut of Scene 01 instead of lists; the workflow is his
+> own sketch line, vertical as the brief writes it; System 800 never appears in AFTER; REVIEW is
+> visibly a human decision; every line now holds for its reading time, which brings the film to
+> exactly 75 s.
 
 ---
 
 ## Timeline at a glance
 
-Scenes are joined with short cross-dissolves (12–20 frames), so each scene overlaps
-the previous one slightly. Durations live in `src/stories/story01/timeline.ts`.
+Durations live in `src/stories/story01/timeline.ts` (validated in code: 60–75 s).
 
-| #  | Scene                 | DNA         | World        | Global start | Length | Feeling                      |
-|----|-----------------------|-------------|--------------|--------------|--------|------------------------------|
-| 01 | The Person            | PERSON      | Soft dark    | 0:00.0       | 6.0 s  | Normal day, quiet            |
-| 02 | Before Automation     | PROBLEM     | Dark, dense  | 0:05.6       | 9.5 s  | Repetitive, fragmented       |
-| 03 | The Pain              | PROBLEM     | Dark, slowed | 0:14.4       | 8.5 s  | Heavy, reflective            |
-| 04 | The Question          | INITIATIVE  | Black void   | 0:22.4       | 5.5 s  | Stillness, clarity           |
-| 05 | The Unexpected Part   | INITIATIVE  | Dark → warm  | 0:27.4       | 9.0 s  | Surprise → curiosity         |
-| 06 | Building the Solution | BETTER WAY  | Dark → light | 0:35.9       | 8.0 s  | Order emerging               |
-| 07 | After Automation      | BETTER WAY  | Light        | 0:43.4       | 7.0 s  | Calm, controlled             |
-| 08 | Impact                | IMPACT      | Light        | 0:49.9       | 7.5 s  | Confident, measured          |
-| 09 | The Human Outcome     | PERSON      | Light, warm  | 0:56.9       | 5.5 s  | Personal, proud (not loud)   |
-| 10 | Final Message + End   | BETTER WAY  | Dark ↔ light | 1:01.9       | 10.5 s | Resolve, campaign signature  |
+| #  | Scene | DNA | Light | Start | Length | In |
+|----|-------|-----|-------|-------|--------|----|
+| 01 | The Person | PERSON | normal day | 0:00.0 | 6.0 s (180 f) | — |
+| 02 | Before Automation | PROBLEM | day → dimming | 0:06.0 | 7.5 s (225 f) | cut |
+| 03 | The Pain | PROBLEM | dimmed | 0:13.5 | 8.0 s (240 f) | cut |
+| 04 | The Question | INITIATIVE | dark → black | 0:21.5 | 6.5 s (195 f) | cut |
+| 05 | The Unexpected Part | INITIATIVE | black → warm key | 0:28.0 | 10.0 s (300 f) | cut |
+| 06 | Building the Solution | BETTER WAY | warm daylight | 0:38.0 | 7.0 s (210 f) | cut |
+| 07 | After Automation | BETTER WAY | Scene 01's light, warmer | 0:45.0 | 7.0 s (210 f) | cut (match) |
+| 08 | Impact | IMPACT | warm daylight | 0:52.0 | 5.7 s (170 f) | cut |
+| 09 | The Human Outcome | PERSON | warm daylight | 0:57.3 | 7.0 s (210 f) | 10 f dissolve |
+| 10 | Final Message + End Card | IMPACT (sign-off) | dark → warm → ink | 1:04.0 | 11.0 s (330 f) | 10 f dissolve |
 
-Total ≈ 72.4 s.
+Σ 2,270 f − 20 f of dissolve overlap = **2,250 f = 75.0 s**.
 
----
-
-## Recurring visual anchors
-
-1. **The Portrait** — an editorial portrait frame of the employee (photo slot). Until a
-   real, approved photo is dropped in, a soft back-lit studio silhouette stands in. The
-   portrait is how we "return to the same employee" in Scenes 01, 02, 03, 05, 07, 08, 09.
-2. **The Workspace** — the process lives as floating UI artefacts in a shallow depth
-   field around the portrait: the handover form, the signature, emails, follow-ups,
-   the System 800 update window, scattered files. In BEFORE they pile up and overlap;
-   in AFTER they collapse into one aligned flow.
-3. **The Request** — the same "New device handover request" notification opens
-   Scene 01 and Scene 07. Same trigger, different experience.
+**Reading rule.** After a line is fully revealed it holds ≥ 1.5 s + 0.25 s per word (key moments
+longer). Nothing is mid-reveal at a cut or inside a dissolve. One new thing at a time.
 
 ---
 
-## Scene 01 — The Person (0:00 · 180 f)
+## Shot grammar (what the camera can see)
 
-**Purpose:** meet him on an ordinary day; nothing is wrong yet.
-
-| Local frames | Picture | Copy |
+| Shot | Component | Use |
 |---|---|---|
-| 0–30 | Fade up from black on a soft graphite backdrop. The portrait card sits left of centre; very slow camera push-in (1.00 → 1.04 over the scene). Small campaign kicker top-left. | `STORY 01 — CORPORATE TECHNOLOGY` (mono kicker) |
-| 20–45 | Name plate settles under the portrait. | `[Employee Name]` · `IT Support · Corporate Technology` |
-| 40–70 | A single notification glides in beside the portrait, orange signal dot pulses once. | `New device handover request` · `Device delivery · Asset registration` |
-| 75–118 | Large line rises from a mask, left-aligned in the right column. | **"Another device handover."** |
-| 118–180 | First line dims to 35 %; second line rises beneath it. The word *manual* is set in the serif italic. | **"Another manual process."** |
+| **Workspace** (over-the-shoulder, wide) | `Workspace` | His shoulder and the back of his head out of focus in the foreground, his monitor sharp, the desk edge below. The room's light is the story's light. |
+| **Screen insert** | `ScreenInsert` | What he sees on screen: the digital half of the process. |
+| **Desk insert** (top-down) | `DeskInsert` | The paper half: forms, signatures, the pen, the phone. |
+| **Hero shot** (medium / close profile) | `HeroShot` | Him, looking right towards his screen, lit by it. Text sits in the space he is looking into. |
 
-**Camera:** single, slow push. **Motion:** calm — this is the "normal" baseline.
+Cutting between him and what he sees (shot / reverse-shot) lets a still figure *look at*,
+*stop* and *decide* without an actor. His **cursor** (`Cursor`) is his hand on screen.
 
 ---
 
-## Scene 02 — Before Automation (0:05.6 · 285 f)
+## Scene 01 — The Person · 180 f · light `normalDay`
 
-**Purpose:** feel the repetition. The workspace fills up around him.
+An ordinary morning. Nothing is wrong yet. No titles, no name plate (they are held back for Scene 05).
 
-The portrait shrinks to the centre of the frame. A thin **step rail** runs along the
-bottom edge and highlights the current step; each step drops its artefact into the space
-around him. Artefacts overlap, sit at small rotations (±3°) and on three depth planes
-(back planes slightly blurred).
-
-| Local frames | Step on rail | Artefact that appears |
+| f | Picture | Copy |
 |---|---|---|
-| 0–30   | Paper Form | Paper "Device Handover Form" sheet (Employee / Device / Serial No. / Site / Date / Signature lines) |
-| 30–60  | Signature | A signature stroke draws itself on the form's signature line |
-| 60–90  | Email | Email card — To: Asset Team · "Device handover — signed form attached" |
-| 90–120 | Follow-up | Reply card "Re: Device handover" + a short "Any update on this?" ping |
-| 120–150 | Manual System Update | "System 800" window, fields filled in by a typing cursor |
-| 150–175 | File / Record | Files split across three places: Email attachments · Shared folder · Local files |
-| 175–200 | Another Email | "Fwd: Re: Device handover" card |
-| 200–285 | Repeat | The rail loops back to *Paper Form*; the artefact set duplicates — more paper, more emails, more notifications, more follow-ups — offset and denser. Slow push-in; the employee is now surrounded. |
-
-**Annotation chips** (premium UI annotations, mono, small, with a hairline leader):
-`Manual` (f 20) · `Paper-Based` (f 45) · `Multiple Follow-ups` (f 105) · `Repeated Daily` (f 205) ·
-`High Manual Effort` (f 230) · `Risk of Human Error` (f 250).
-
-**Tone guardrails:** no comedy, no exaggerated chaos, no sad face. The person stays composed;
-the *process* is what multiplies.
+| 0–36 | **Workspace**, normal daylight, slow drift. A calm screen; his cursor moves a little — he is working. | — |
+| 36–56 | The request notification slides onto his screen (top right); a soft flash of screen light on his shoulder; the cursor drifts towards it. | *(prop)* New device handover request · Device delivery · Asset registration |
+| 56 | **Cut → Hero shot** (medium), he is reading. | |
+| 60–84 → 118 | Line rises into the space in front of him, holds. | **Another device handover.** |
+| 118–130 | Pause. Nothing new enters. | |
+| 130–152 → 180 | Line 1 dims to 40 %; line 2 rises beneath it and holds. Roman type — no emphasis. | **Another manual process.** |
 
 ---
 
-## Scene 03 — The Pain (0:14.4 · 255 f)
+## Scene 02 — Before Automation · 225 f · light `normalDay → dimmed`
 
-**Purpose:** slow down and name the cost.
+The old process, felt as rhythm. No progress rail: each step's name is a small caption on its
+own artefact. Cuts between screen, desk and workspace. The room darkens as the work piles up.
 
-The clutter freezes and drifts back out of focus (blur + dim). Motion slows to the
-longest easing in the film. Lines stack editorially, each previous line dimming.
+| f | Shot | Step (caption) | Artefact |
+|---|---|---|---|
+| 0–22 | Desk | Paper Form | The paper handover form slides onto the desk |
+| 22–44 | Desk (close) | Signature | A signature draws itself; the pen |
+| 44–66 | Screen | Email | Email to the Asset Team, sent |
+| 66–88 | Screen | Follow-up | "Any update on this?" lands at the screen edge |
+| 88–118 | Screen | Manual System Update | The System 800 window; one field typed by hand (1 char / 2 f) |
+| 118–136 | Screen | File / Record | The record splits between two places: *Emails* · *Files* |
+| 136–150 | Screen | Another Email | Fwd: Device handover |
+| 150–215 | Workspace → fast inserts | Repeat | Match cut back to the same request arriving. The loop replays faster (≈ 8 f, then ≈ 4 f per step) and the layers **stack instead of clearing** — more paper, more emails, more notifications, more follow-ups. Each new cluster carries an uncounted **Site** tag: the same process restarting elsewhere. |
+| 215–225 | Workspace | — | Held: he is surrounded; the room is dim; the screen is the only light. |
 
-| Local frames | Copy |
-|---|---|
-| 10–75   | "The task wasn't difficult." |
-| 75–150  | "But repeating it every day was costing time." |
-| 150–255 | "And every manual step created another opportunity for error." |
+**Annotation pop-ups** (verbatim, title case, persisting, never covering the step being shown):
+`Paper-Based` (12) · `Manual` (50) · `Multiple Follow-ups` (80) · `High Manual Effort` (108) ·
+`Risk of Human Error` (126) · `Repeated Daily` (166).
 
-**Pain indicators** (same metric pop-up component, *before* intent), staggered from f 110:
-
-```
-┌ TIME        ┌ EFFORT          ┌ RISK          ┌ RECORDS
-↓ Lost to     ↑ Manual          ↑ Human error   Fragmented
-  repetitive    handling
-  work
-```
+Motion: faster entrances, springy settles, overlaps, small rotations on paper. Never comic,
+never per-frame jitter. He stays composed; the process multiplies.
 
 ---
 
-## Scene 04 — The Question (0:22.4 · 165 f)
+## Scene 03 — The Pain · 240 f · light `dimmed`
 
-**Purpose:** the turning point. Give it room.
+Slower. One line at a time, each on its own shot; indicators pinned to real objects, never in a row.
 
-| Local frames | Picture | Copy |
+| f | Picture | Copy / indicators |
 |---|---|---|
-| 0–40 | The last of the clutter dissolves piece by piece; a tight, still crop of the portrait remains — he stops and looks at the process differently. Thin cinematic letterbox bars ease in. | — |
-| 40–80 | Portrait fades to near-black. The question rises word by word, centred, in the large serif. | **"Why are we still doing this manually?"** |
-| 80–165 | Hold. Only a 2 % scale drift. Nothing else moves. | — |
+| 0–62 | Desk insert: one single paper form, in focus. Simple. | **The task wasn’t difficult.** (in 8) |
+| 62–140 | The same form, now one of a stack of identical forms; emails stacked behind. | **But repeating it every day was costing time.** (in 66) · `TIME ↓ Lost to repetitive work` pinned to the stack (100) · `EFFORT ↑ Manual handling` pinned to the paper pile (114) |
+| 140–156 | **Cut → Hero shot** (close): he looks at it. Silence. | — |
+| 156–240 | Screen insert: the System 800 field being typed; the two record places. | **And every manual step created another opportunity for error.** (in 158) · `RISK ↑ Human error` pinned to the typed field (194) · `RECORDS Fragmented` pinned to the two record places (206) |
 
-This is the quietest, most spacious frame of the film.
+At most two indicators on screen at once (earlier ones leave as later ones arrive).
 
 ---
 
-## Scene 05 — The Unexpected Part (0:27.4 · 270 f)
+## Scene 04 — The Question · 195 f · light `dimmed → dark → black`
 
-**Purpose:** reveal who solved it — and that he had to learn first.
+The turning point. The strongest, quietest frame of the film.
 
-| Local frames | Picture | Copy |
+| f | Picture | Copy |
 |---|---|---|
-| 0–70 | Portrait returns (left), name plate visible. Line centred-right. | "He was a junior IT Support employee." |
-| 70–135 | Pause, then the reveal; an orange hairline underlines *no previous automation experience*. | **"He had no previous automation experience."** |
-| 135–205 | Background warms (graphite → warm dark). Four words land one by one, ~15 f apart. Behind them, faint sketch-like flow drafts draw, get crossed out, and redraw — learning, testing, iteration. | **LEARN. EXPERIMENT. BUILD. IMPROVE.** |
-| 205–270 | Supporting line beneath. | "He started learning what he needed to solve the problem himself." |
-
-**Guardrail:** no code walls, no "expert developer" tropes. Drafts look like a learner's
-sketches: dashed boxes, a crossed-out attempt, a "test" tick after a few tries.
+| 0–36 | The frozen clutter quietly re-aligns: rotated chaos straightens into a grid of identical, repeating cycles. The pile becomes a pattern — he sees the process differently. | — |
+| 36–72 | **Hard cut → Hero shot** (close), held still. Only grain moves. He stops. | — |
+| 72–86 | Fade to near-black. | — |
+| 86–112 | The question rises as one thought (line by line, not word by word), centred, in the human voice (Newsreader Light). | **Why are we still doing this manually?** |
+| 112–195 | Hold. Nothing moves except grain. No camera move on the type. | |
 
 ---
 
-## Scene 06 — Building the Solution (0:35.9 · 240 f)
+## Scene 05 — The Unexpected Part · 300 f · light `black → warm key`
 
-**Purpose:** the mess becomes a clean workflow the viewer understands in seconds.
+The reveal: who solved it — and that he had to learn first.
 
-| Local frames | Picture |
-|---|---|
-| 0–50 | The BEFORE artefacts (form, emails, window, files) fly in from the edges, straighten, shrink and snap into six evenly spaced nodes. Background cross-fades from graphite to warm paper. |
-| 50–150 | A single orange line draws left → right through the nodes; each label appears as the line reaches it. |
-| 150–240 | A small token travels the whole path in one smooth move. Several site nodes on the left feed lines into SUBMIT; at NOTIFY the line branches to *Asset Team* and *Employee*. |
-
-```
-SITE ─┐
-SITE ─┼─▶ SUBMIT ─▶ TRIGGER ─▶ REVIEW ─▶ GENERATE RECORD ─▶ CENTRALIZE ─▶ NOTIFY ─┬─ Asset Team
-SITE ─┘                         approve / reject                                  └─ Employee
-```
-
-Node sub-labels (facts from the brief only): *Digital submission* · *Workflow starts
-automatically* · *Approve / Reject* · *Required record generated* · *One central record* ·
-*Asset Team & employee*. Site nodes carry no count — they read as "multiple sites".
-
-Kicker: `THE NEW WORKFLOW`.
-
----
-
-## Scene 07 — After Automation (0:43.4 · 210 f)
-
-**Purpose:** the same employee, the same request — a completely different experience.
-
-| Local frames | Picture |
-|---|---|
-| 0–90 | Exact layout of Scene 01, now in the light world: portrait left, the same "New device handover request" notification arrives. Instead of paperwork, a single aligned column completes calmly: `Submitted digitally ✓` → `Workflow triggered ✓` → `Reviewed & approved ✓` → `Record generated ✓` → `Centralized ✓` → `Asset Team notified ✓` · `Employee notified ✓`. |
-| 90–210 | A vertical divider sweeps in from the right to form a split screen. **BEFORE** (left, graphite, crowded, faster jittery motion) vs **AFTER** (right, paper, whitespace, still). |
-
-Split-screen lists (verbatim from the brief):
-
-| BEFORE | AFTER |
-|---|---|
-| Paper | Digital submission |
-| Emails | Automated flow |
-| Manual follow-ups | Centralized record |
-| Manual updates | Automatic notifications |
-| Fragmented records | Clean process |
-
----
-
-## Scene 08 — Impact (0:49.9 · 225 f)
-
-**Purpose:** business impact that complements the story without dominating it.
-
-The portrait sits centre-left, light world, lots of whitespace. Metric pop-ups appear one
-at a time around him with hairline leaders, in two calm waves (never all at once):
-
-| Wave | Local frames | Metric | Placeholder (draft) | Final render until verified |
-|---|---|---|---|---|
-| A | 10  | TIME SAVED      | `[X]%` / `[X] hrs`       | Less Manual Work |
-| A | 30  | MANUAL STEPS    | `[X] → [X]`              | Reduced Repetitive Work |
-| A | 50  | PROCESSING TIME | `[Before] → [After]`     | Faster Processing |
-| A | 70  | PAPER           | —                        | Reduced |
-| B | 115 | SITES           | `[X] connected`          | One Consistent Process |
-| B | 135 | RECORDS         | —                        | Centralized |
-| B | 155 | ERROR RISK      | —                        | Reduced |
-| B | 175 | MANUAL EMAILS   | —                        | Reduced |
-
-Wave A recedes (fade to 0) as wave B arrives, keeping the frame uncluttered.
-Values are driven by `src/stories/story01/metrics.config.ts`; the
-`Story01-MetricsDraft` composition shows the `[X]` slots with a *TO VERIFY* tag.
-
----
-
-## Scene 09 — The Human Outcome (0:56.9 · 165 f)
-
-**Purpose:** land the real story — a person who chose to improve things.
-
-Portrait large and warm, slow push-in to a closer crop. Copy left-aligned beside it.
-
-| Local frames | Copy |
-|---|---|
-| 8–55   | "He wasn't asked to build it." |
-| 55–68  | *(pause)* |
-| 68–105 | "He saw a problem." |
-| 105–165 | "And found *a better way.*" — *a better way* in the serif italic, orange. |
-
----
-
-## Scene 10 — Final Message & End Card (1:01.9 · 315 f)
-
-| Local frames | Picture | Copy |
+| f | Picture | Copy |
 |---|---|---|
-| 0–60 | Graphite frame with **MANUAL** in large type. An orange hairline sweeps across; behind it the frame turns to paper and the word becomes **AUTOMATED**. | MANUAL → AUTOMATED |
-| 60–110 | Centred. | "No previous automation experience." |
-| 110–175 | *(pause)* then | "Just *curiosity, ownership,* and *the drive to improve.*" |
-| 175–315 | **End card** (see `DESIGN_SYSTEM.md`): kicker, campaign line, story meta, optional tagline. Hold ≥ 3.5 s. | `WE FOUND A BETTER WAY.` · `Story 01` · `Corporate Technology` · *Small improvements can create meaningful impact.* |
+| 0–12 | Black. | — |
+| 12–40 | **Hero shot** (medium) racks from soft to sharp; rim light only. The documentary **lower-third** lands — the first and only time his name and role appear. | lower-third: *[name]* · IT Support |
+| 24–50 → 92 | Line rises in the space in front of him. | **He was a junior IT Support employee.** |
+| 92–108 | Picture and line fade to near-black. Silence. | — |
+| 108–135 → 190 | Alone on a clean frame, one size larger, no underline. As it holds, a warm key light slowly rises on him behind the type. | **He had no previous automation experience.** |
+| 190–196 | Cut → **Screen insert** in warm light: his notes, a blank canvas. | |
+| 196 → 300 | Supporting line settles at the bottom and stays. | He started learning what he needed to solve the problem himself. |
+| 204 | His cursor hovers, reads. | **LEARN.** |
+| 228 | A dashed draft of a path is drawn — then crossed out. | **EXPERIMENT.** (replaces) |
+| 252 | A second draft; the dashed line turns solid. | **BUILD.** (replaces) |
+| 276 → 300 | The line straightens. | **IMPROVE.** (replaces, holds) |
+
+The four words appear one at a time, each replacing the last, set at 76 px — learning, not a
+motivational poster. Drafts look like a learner's sketches: no code, no expert tropes.
 
 ---
 
-## Fact fidelity checklist
+## Scene 06 — Building the Solution · 210 f · light `warm daylight`
 
-- The hero is a **junior IT Support** employee with **no previous automation experience**
-  who learned independently and built the workflow. He was **not asked** to build it.
-- BEFORE shows only the listed pains: paper forms, physical signatures, repetitive emails,
-  manual System 800 updates, follow-ups with the Asset Team, records spread across emails
-  and files, repetition across multiple sites.
-- AFTER shows only the listed capabilities: digital submission, automated triggering,
-  review with approval/rejection, automatic record generation, centralized storage,
-  consolidated multi-site data, notifications to the Asset Team and to the employee,
-  fewer manual emails, less paper, better consistency and accountability.
-- AFTER does **not** claim System 800 is updated automatically, does not claim paper is
-  eliminated, and shows no product logos.
-- No number appears on screen unless it is entered as a verified value in
-  `metrics.config.ts`.
+His line becomes the workflow. Vertical, as the brief writes it.
+
+| f | Picture | Copy |
+|---|---|---|
+| 0–24 | The straightened line from Scene 05 turns orange and swings vertical; the room fills with warm daylight. | — |
+| 24–40 | Three or four hairlines converge from off-frame into the top of the line (no count). | `Sites` (small) |
+| 40–150 | The camera tracks down the line. One step at a time, each word arriving as the line reaches it and leaving as the next arrives. As the line passes, old artefacts fold into it (the paper form flattens into a point at SUBMIT; scattered files merge into one at CENTRALIZE; the email collapses at NOTIFY). The System 800 window never becomes a step. | **SUBMIT** (40) · **TRIGGER** (58) · **REVIEW** (76) with `Approve / Reject` — a click resolves it to *Approve* (≈ 96): a human decision · **GENERATE RECORD** (108) · **CENTRALIZE** (126) · **NOTIFY** (144) → branches to `Asset Team` / `Employee` (148–160) |
+| 150–176 | One pull-back reveals the whole line, all six steps, in a single gesture. | |
+| 162 / 174 → 210 | Impact pop-ups pinned to the process: SITES at the convergence, RECORDS at CENTRALIZE. | `Multiple sites · One Consistent Process` · `Records · Centralized` |
+
+No travelling token, no kicker, no sub-labels besides Approve / Reject. No product styling.
+
+---
+
+## Scene 07 — After Automation · 210 f · light `afterDay`
+
+**Match cut of Scene 01**: same framing, same request, same moment. A different experience.
+
+| f | Picture | Copy |
+|---|---|---|
+| 0–18 | Workspace, exactly Scene 01's framing, a little warmer. The same request arrives in the same place. | — |
+| 18–40 | One click. A single calm status resolves on screen. No tick cascade. | *(prop)* Submitted digitally |
+| 40–56 | Stillness. A clear desk, a quiet screen. Nothing happens — the absence is the point. | — |
+| 56–74 | One orange line wipes across the same shot → split screen: **left** = Scene 02's final cluttered frame (dim), **right** = this calm frame. | `Before` · `After` (small) |
+| 74–194 | Chips pinned to real objects, alternating sides, one at a time (≈ 12 f apart), earlier chips dimming. Two separate groups — no row pairing, no arrows between sides. | Left: Paper · Emails · Manual follow-ups · Manual updates · Fragmented records — Right: Digital submission · Automated flow · Centralized record · Automatic notifications · Clean process |
+| 194–210 | Hold. | |
+
+Left side motion: a restless slow drift and periodic interruptions (≤ 4 px, ≥ 20 f period).
+Right side: still. System 800 appears only on the BEFORE side.
+
+---
+
+## Scene 08 — Impact · 170 f · light `warm daylight`
+
+A calm AFTER workspace; pop-ups pinned to process objects (never to his body), one at a time,
+at most two on screen.
+
+| f | Metric (final film, until verified) | Pinned to |
+|---|---|---|
+| 10 | `┌ Less Manual Work` *(TIME SAVED [X]% / [X] hrs)* | the single item on his screen |
+| 36 | `┌ Reduced Repetitive Work` *(MANUAL STEPS [X] → [X])* | the flow line |
+| 62 | `┌ Faster Processing` *(PROCESSING TIME [Before] → [After])* | the end of the flow line |
+| 88 | `┌ PAPER ↓ Reduced` | the clear desk |
+| 114 | `┌ MANUAL EMAILS ↓ Reduced` | the quiet notification |
+| 140 → 170 | `┌ Better Accuracy` *(ERROR RISK)* | the record |
+
+Brackets show what the **MetricsDraft** composition displays instead: label + `[X]` slot +
+*TO VERIFY*. A verified value (with source) replaces both.
+
+---
+
+## Scene 09 — The Human Outcome · 210 f · light `warm daylight`
+
+Back to him. Hero shot, slow push from medium to close.
+
+| f | Copy |
+|---|---|
+| 14–40 → 78 | **He wasn’t asked to build it.** |
+| 78–96 | *(pause — nothing new)* |
+| 96–114 → 140 | **He saw a problem.** |
+| 140–165 → 210 | **And found *a better way.*** — *a better way* in the human voice, orange; holds ≥ 1.5 s. |
+
+---
+
+## Scene 10 — Final Message & End Card · 330 f
+
+| f | Picture | Copy |
+|---|---|---|
+| 10–55 | Image callback: the old pile (dim) labelled **MANUAL**; one orange hairline sweeps across — behind it the pile collapses into the single orange line in warm light and the word becomes **AUTOMATED**. | MANUAL → AUTOMATED |
+| 58–80 → 103 | Centred. | **No previous automation experience.** |
+| 103–117 | *(pause)* | |
+| 117–150 → 190 | Centred. Only *the drive to improve* in the human voice. | **Just curiosity, ownership, and *the drive to improve.*** |
+| 190–225 | **End card** builds (rule → line word by word → the orange full stop lands last → tagline → meta). | **WE FOUND A BETTER WAY.** · *Small improvements can create meaningful impact.* · Story 01 · Corporate Technology |
+| 225–330 | Still hold (3.5 s). | |
+
+---
+
+## Fact fidelity checklist (enforced in review)
+
+- Hero: a **junior IT Support** employee, **no previous automation experience**, learned
+  independently, built the workflow, **was not asked** to build it.
+- BEFORE shows only the brief's pains: paper forms, physical signatures, repetitive emails,
+  manual System 800 updates, follow-ups with the Asset Team, records spread across emails and
+  files, repetition across multiple sites.
+- AFTER shows only the brief's capabilities: digital submission, automated triggering, review
+  with approval/rejection (a human decision), automatic record generation, centralized storage,
+  consolidated multi-site data, notifications to the Asset Team and to the employee, fewer
+  manual emails, less paper, better consistency and accountability.
+- **System 800 never appears in any AFTER frame.** Paper is *reduced*, not eliminated. No
+  clocks or "seconds later" compression that would imply a processing time.
+- No product names, logos or recognisable product UI (Outlook, Forms, Excel, Power Automate).
+- No number on screen unless verified with a source in `metrics.config.ts`.

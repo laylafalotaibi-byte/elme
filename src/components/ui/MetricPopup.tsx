@@ -52,7 +52,7 @@ const Value: React.FC<{ metric: ResolvedMetric; size: number; color: string; mut
       </div>
     );
   }
-  const textSize = metric.kind === 'text' ? Math.round(size * 0.68) : size;
+  const textSize = metric.kind === 'text' ? Math.round(size * 0.74) : size;
   return (
     <div style={{ ...mask, fontSize: textSize }}>
       <span style={{ ...rise, ...valueStyle, fontSize: textSize, letterSpacing: metric.kind === 'text' ? '-0.02em' : valueStyle.letterSpacing }}>
@@ -74,11 +74,11 @@ export const MetricPopup: React.FC<MetricPopupProps> = ({
   intent = 'after',
   leader,
   caption,
-  valueSize = 52,
-  width = 420,
+  valueSize = 56,
+  width = 520,
 }) => {
   const frame = useCurrentFrame();
-  const { metrics, mode } = useStory();
+  const { metrics, mode, story } = useStory();
   const metric = metricProp ?? resolveMetric(findMetric(metrics, metricId ?? ''), mode);
   const c = toneColors(tone);
 
@@ -100,22 +100,24 @@ export const MetricPopup: React.FC<MetricPopupProps> = ({
         </svg>
       ) : null}
       <div style={{ position: 'absolute', left: 0, top: 0, color: intent === 'before' ? colors.accent : c.muted }}>
-        <CornerBracket size={14} draw={bracket} color="currentColor" />
+        <CornerBracket size={16} draw={bracket} color="currentColor" strokeWidth={1.5} />
       </div>
-      <div style={{ paddingLeft: 24, paddingTop: 0 }}>
-        <div style={{ ...type.label, color: c.muted, opacity: label, transform: `translateX(${(1 - label) * -6}px)`, marginTop: -2 }}>{metric.label}</div>
-        <div style={{ marginTop: 12 }}>
+      <div style={{ paddingLeft: 28, paddingTop: 0 }}>
+        {metric.label ? (
+          <div style={{ ...type.label, color: c.muted, opacity: label, transform: `translateX(${(1 - label) * -6}px)`, marginTop: -3 }}>{metric.label}</div>
+        ) : null}
+        <div style={{ marginTop: metric.label ? 14 : -4 }}>
           <Value metric={metric} size={valueSize} color={c.text} muted={c.muted} p={value} />
         </div>
         {isPlaceholder && mode === 'draft' ? (
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 10, opacity: value }}>
             <span style={{ height: 0, width: 120, borderTop: `1px dashed ${colors.accent}` }} />
-            <span style={{ fontFamily: fonts.mono, fontSize: 11, letterSpacing: '0.16em', color: colors.accent, border: `1px solid ${colors.accent}`, padding: '3px 6px' }}>
-              TO VERIFY
+            <span style={{ fontFamily: fonts.mono, fontSize: 14, letterSpacing: '0.14em', color: colors.accent, border: `1px solid ${colors.accent}`, padding: '4px 8px' }}>
+              {story.ui.toVerify}
             </span>
           </div>
         ) : null}
-        {caption ? <div style={{ ...type.small, color: c.muted, marginTop: 8, opacity: value }}>{caption}</div> : null}
+        {caption ? <div style={{ ...type.caption, fontWeight: 400, color: c.muted, marginTop: 10, opacity: value }}>{caption}</div> : null}
       </div>
     </div>
   );

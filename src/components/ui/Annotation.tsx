@@ -6,7 +6,7 @@ import { Dot } from '../glyphs/Glyphs';
 
 /**
  * Floating contextual annotation — a premium UI tag, not a PowerPoint label.
- * Small mono text in a hairline pill, signal dot, optional leader to what it describes.
+ * Copy as written (title case) in a hairline pill, signal dot, optional leader to what it describes.
  */
 export const Annotation: React.FC<{
   text: string;
@@ -49,9 +49,9 @@ export const Annotation: React.FC<{
         style={{
           display: 'inline-flex',
           alignItems: 'center',
-          gap: 10,
+          gap: 12,
           transform: 'translateY(-50%)',
-          padding: '9px 14px 9px 12px',
+          padding: '11px 18px 11px 15px',
           borderRadius: 999,
           background: dark ? 'rgba(24,26,30,0.78)' : 'rgba(251,250,247,0.85)',
           boxShadow: `0 0 0 1px ${dark ? 'rgba(255,255,255,0.12)' : colors.stoneLine}, 0 10px 24px -12px rgba(0,0,0,0.5)`,
@@ -59,8 +59,8 @@ export const Annotation: React.FC<{
           whiteSpace: 'nowrap',
         }}
       >
-        <Dot size={6} />
-        <span style={{ ...type.label, fontSize: 13, color: c.text }}>{text}</span>
+        <Dot size={8} />
+        <span style={{ ...type.caption, fontSize: 22, color: c.text }}>{text}</span>
       </div>
     </div>
   );

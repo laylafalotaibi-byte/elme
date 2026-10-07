@@ -10,8 +10,10 @@ const faces: Array<{ family: string; file: string; weight: string; style?: strin
   { family: 'Inter Tight', file: 'inter-tight-latin-400-normal.woff2', weight: '400' },
   { family: 'Inter Tight', file: 'inter-tight-latin-500-normal.woff2', weight: '500' },
   { family: 'Inter Tight', file: 'inter-tight-latin-600-normal.woff2', weight: '600' },
-  { family: 'Instrument Serif', file: 'instrument-serif-latin-400-normal.woff2', weight: '400' },
-  { family: 'Instrument Serif', file: 'instrument-serif-latin-400-italic.woff2', weight: '400', style: 'italic' },
+  { family: 'Newsreader', file: 'newsreader-latin-300-normal.woff2', weight: '300' },
+  { family: 'Newsreader', file: 'newsreader-latin-300-italic.woff2', weight: '300', style: 'italic' },
+  { family: 'Newsreader', file: 'newsreader-latin-400-normal.woff2', weight: '400' },
+  { family: 'Newsreader', file: 'newsreader-latin-400-italic.woff2', weight: '400', style: 'italic' },
   { family: 'JetBrains Mono', file: 'jetbrains-mono-latin-400-normal.woff2', weight: '400' },
   { family: 'JetBrains Mono', file: 'jetbrains-mono-latin-500-normal.woff2', weight: '500' },
 ];

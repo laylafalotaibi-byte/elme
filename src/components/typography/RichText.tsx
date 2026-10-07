@@ -3,7 +3,7 @@ import { colors, fonts } from '../../campaign/theme';
 
 /**
  * Copy can wrap words in *asterisks* to switch to the campaign's "human voice"
- * (Instrument Serif italic). The asterisks are never rendered.
+ * (Newsreader italic). The asterisks are never rendered.
  */
 
 export type Segment = { text: string; emphasis: boolean };
@@ -23,9 +23,9 @@ export type EmphasisStyle = 'serif' | 'serifAccent' | 'accent' | 'none';
 export const emphasisStyle = (style: EmphasisStyle): React.CSSProperties => {
   switch (style) {
     case 'serif':
-      return { fontFamily: fonts.serif, fontStyle: 'italic', fontWeight: 400, letterSpacing: '-0.01em' };
+      return { fontFamily: fonts.serif, fontStyle: 'italic', fontWeight: 300, letterSpacing: '-0.015em' };
     case 'serifAccent':
-      return { fontFamily: fonts.serif, fontStyle: 'italic', fontWeight: 400, letterSpacing: '-0.01em', color: colors.accent };
+      return { fontFamily: fonts.serif, fontStyle: 'italic', fontWeight: 300, letterSpacing: '-0.015em', color: colors.accent };
     case 'accent':
       return { color: colors.accent };
     case 'none':

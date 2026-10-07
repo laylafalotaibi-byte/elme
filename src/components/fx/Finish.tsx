@@ -7,10 +7,13 @@ import { ease, progress } from '../../campaign/motion';
  * Film finish layers: animated grain, vignette and cinematic letterbox. Pure SVG/CSS.
  */
 
-/** Animated film grain. Re-seeds every frame; rendered at half resolution and scaled up. */
-export const Grain: React.FC<{ opacity?: number }> = ({ opacity = 0.075 }) => {
+/**
+ * Film grain: four seeded noise tiles, changing every 3 frames (≈10 fps) so it reads as
+ * texture rather than per-frame noise that bloats the encode.
+ */
+export const Grain: React.FC<{ opacity?: number }> = ({ opacity = 0.045 }) => {
   const frame = useCurrentFrame();
-  const seed = (frame * 7919) % 1000;
+  const seed = [11, 37, 73, 97][Math.floor(frame / 3) % 4];
   return (
     <AbsoluteFill style={{ pointerEvents: 'none', mixBlendMode: 'overlay', opacity }}>
       <svg width="100%" height="100%" viewBox="0 0 960 540" preserveAspectRatio="none">

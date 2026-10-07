@@ -41,22 +41,27 @@ export const toneColors = (tone: Tone) =>
 
 export const fonts = {
   sans: '"Inter Tight", "Helvetica Neue", Arial, sans-serif',
-  serif: '"Instrument Serif", Georgia, "Times New Roman", serif',
+  serif: '"Newsreader", Georgia, "Times New Roman", serif',
   mono: '"JetBrains Mono", "SFMono-Regular", Menlo, monospace',
 } as const;
 
 /** Typographic scale (px at 1920×1080). */
 export const type = {
-  displayXL: { fontFamily: fonts.serif, fontSize: 148, lineHeight: 1.02, letterSpacing: '-0.02em', fontWeight: 400 },
+  displayXL: { fontFamily: fonts.serif, fontSize: 128, lineHeight: 1.04, letterSpacing: '-0.025em', fontWeight: 300 },
   displayL: { fontFamily: fonts.sans, fontSize: 112, lineHeight: 1.0, letterSpacing: '-0.035em', fontWeight: 600 },
   displayM: { fontFamily: fonts.sans, fontSize: 76, lineHeight: 1.06, letterSpacing: '-0.03em', fontWeight: 500 },
   bodyL: { fontFamily: fonts.sans, fontSize: 40, lineHeight: 1.25, letterSpacing: '-0.01em', fontWeight: 400 },
   title: { fontFamily: fonts.sans, fontSize: 30, lineHeight: 1.2, letterSpacing: '-0.01em', fontWeight: 500 },
   body: { fontFamily: fonts.sans, fontSize: 22, lineHeight: 1.35, letterSpacing: '0em', fontWeight: 400 },
-  small: { fontFamily: fonts.sans, fontSize: 17, lineHeight: 1.35, letterSpacing: '0em', fontWeight: 400 },
-  kicker: { fontFamily: fonts.mono, fontSize: 17, lineHeight: 1.2, letterSpacing: '0.16em', fontWeight: 500, textTransform: 'uppercase' },
-  label: { fontFamily: fonts.mono, fontSize: 14, lineHeight: 1.2, letterSpacing: '0.14em', fontWeight: 500, textTransform: 'uppercase' },
-  metricValue: { fontFamily: fonts.sans, fontSize: 52, lineHeight: 1.0, letterSpacing: '-0.03em', fontWeight: 500 },
+  small: { fontFamily: fonts.sans, fontSize: 18, lineHeight: 1.35, letterSpacing: '0em', fontWeight: 400 },
+  /** Readable annotation / caption (title or sentence case, as written in config). */
+  caption: { fontFamily: fonts.sans, fontSize: 26, lineHeight: 1.2, letterSpacing: '-0.005em', fontWeight: 500 },
+  /** Mono label for in-world UI and metric labels (≥ 20 px so it survives a 960 px player). */
+  kicker: { fontFamily: fonts.mono, fontSize: 20, lineHeight: 1.2, letterSpacing: '0.14em', fontWeight: 500, textTransform: 'uppercase' },
+  label: { fontFamily: fonts.mono, fontSize: 20, lineHeight: 1.2, letterSpacing: '0.12em', fontWeight: 500, textTransform: 'uppercase' },
+  /** Tiny mono texture on props (not meant to be read). */
+  micro: { fontFamily: fonts.mono, fontSize: 12, lineHeight: 1.2, letterSpacing: '0.12em', fontWeight: 500, textTransform: 'uppercase' },
+  metricValue: { fontFamily: fonts.sans, fontSize: 56, lineHeight: 1.0, letterSpacing: '-0.03em', fontWeight: 500 },
 } satisfies Record<string, CSSProperties>;
 
 export type TypeStyle = keyof typeof type;

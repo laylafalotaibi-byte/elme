@@ -5,16 +5,17 @@ import type { MetricConfig } from '../../campaign/types';
  * -------------------------
  * NO NUMBER IN THIS FILE IS VERIFIED YET. Do not invent values.
  *
- * To publish a verified figure, set `verified`, e.g.
- *   verified: { value: '+35%' }                 (format: 'single')
- *   verified: { from: '12', to: '3' }           (format: 'fromTo')
+ * To publish a verified figure, set `verified` WITH its source, e.g.
+ *   verified: { value: '+[X]%', source: 'Asset Team log, Q3' }        (format: 'single')
+ *   verified: { from: '[X]', to: '[X]', source: '…' }                  (format: 'fromTo')
  *
  * Until then:
- *   - the final composition (Story01) shows the qualitative `fallback` wording;
- *   - the draft composition (Story01-MetricsDraft) shows the `placeholder` slot with a
- *     "TO VERIFY" tag, so reviewers can see what still needs a number.
+ *   - Story01 (final) shows the qualitative `fallback` (approved wording from the brief or
+ *     a stated fact), with a label only where label and wording agree;
+ *   - Story01-MetricsDraft shows `label` + the `placeholder` slot tagged TO VERIFY.
  *
- * Fallback wording comes from the brief's approved list or from facts stated in the brief.
+ * Where they appear: story.config.ts → impact.inWorkflow (Scene 06) and
+ * impact.sequence (Scene 08). All metrics stay editable here even if not sequenced.
  */
 export const story01Metrics: MetricConfig[] = [
   {
@@ -23,7 +24,7 @@ export const story01Metrics: MetricConfig[] = [
     format: 'single',
     verified: null,
     placeholder: { value: '[X]% / [X] hrs' },
-    fallback: 'Less Manual Work',
+    fallback: { label: null, value: 'Less Manual Work' },
   },
   {
     id: 'manualSteps',
@@ -31,7 +32,7 @@ export const story01Metrics: MetricConfig[] = [
     format: 'fromTo',
     verified: null,
     placeholder: { from: '[X]', to: '[X]' },
-    fallback: 'Reduced Repetitive Work',
+    fallback: { label: null, value: 'Reduced Repetitive Work' },
   },
   {
     id: 'processingTime',
@@ -39,43 +40,16 @@ export const story01Metrics: MetricConfig[] = [
     format: 'fromTo',
     verified: null,
     placeholder: { from: '[Before]', to: '[After]' },
-    fallback: 'Faster Processing',
+    fallback: { label: null, value: 'Faster Processing' },
   },
   {
-    // Brief fact: reduced dependency on paper. Only change to "Eliminated" if verified.
+    // Brief fact: reduced dependency on paper. Say "Eliminated" only if verified.
     id: 'paper',
     label: 'Paper',
     format: 'single',
     verified: null,
     placeholder: null,
-    fallback: 'Reduced',
-    direction: 'down',
-  },
-  {
-    // Brief fact: consolidated data across multiple sites. Site count is not known yet.
-    id: 'sites',
-    label: 'Sites',
-    format: 'single',
-    verified: null,
-    placeholder: { value: '[X] connected' },
-    fallback: 'One Consistent Process',
-  },
-  {
-    // Brief fact: centralized record storage.
-    id: 'records',
-    label: 'Records',
-    format: 'single',
-    verified: null,
-    placeholder: null,
-    fallback: 'Centralized',
-  },
-  {
-    id: 'errorRisk',
-    label: 'Error risk',
-    format: 'single',
-    verified: null,
-    placeholder: null,
-    fallback: 'Reduced',
+    fallback: { label: 'Paper', value: 'Reduced' },
     direction: 'down',
   },
   {
@@ -85,7 +59,42 @@ export const story01Metrics: MetricConfig[] = [
     format: 'single',
     verified: null,
     placeholder: null,
-    fallback: 'Reduced',
+    fallback: { label: 'Manual emails', value: 'Reduced' },
     direction: 'down',
+  },
+  {
+    id: 'errorRisk',
+    label: 'Error risk',
+    format: 'single',
+    verified: null,
+    placeholder: null,
+    fallback: { label: null, value: 'Better Accuracy' },
+  },
+  {
+    // Brief fact: consolidated data across multiple sites. The site count is not known yet.
+    id: 'sites',
+    label: 'Sites',
+    format: 'single',
+    verified: null,
+    placeholder: { value: '[X] connected' },
+    fallback: { label: 'Multiple sites', value: 'One Consistent Process' },
+  },
+  {
+    // Brief fact: centralized record storage.
+    id: 'records',
+    label: 'Records',
+    format: 'single',
+    verified: null,
+    placeholder: null,
+    fallback: { label: 'Records', value: 'Centralized' },
+  },
+  {
+    // Brief fact: better process consistency and accountability. Not sequenced by default.
+    id: 'accountability',
+    label: 'Accountability',
+    format: 'single',
+    verified: null,
+    placeholder: null,
+    fallback: { label: null, value: 'Improved Accountability' },
   },
 ];

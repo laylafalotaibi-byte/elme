@@ -9,7 +9,6 @@ import { MaskedReveal } from '../typography/Reveal';
  * Campaign end card — identical layout for every story; only the story number, sector,
  * optional tagline and optional logo change (all from the story config).
  *
- *   STORY 01 — CORPORATE TECHNOLOGY
  *   WE FOUND A
  *   BETTER WAY.            ← full stop in accent orange, lands last
  *   Small improvements can create meaningful impact.
@@ -36,15 +35,14 @@ export const EndCard: React.FC<{ start?: number; tone?: Tone }> = ({ start = 0, 
 
   const [lineA, lineB] = splitLine(campaign.endLine);
   const hasPeriod = campaign.endLine.trim().endsWith('.');
-  const wordStart = 14;
-  const wordStagger = 5;
+  const wordStart = 10;
+  const wordStagger = 4;
   const lastWordAt = wordStart + (lineA.length + lineB.length - 1) * wordStagger;
-  const periodAt = lastWordAt + 16;
+  const periodAt = lastWordAt + 12;
   const period = springAt(f, fps, periodAt, springs.busy);
-  const rule = progress(f, 4, 40, ease.inOut);
-  const kicker = progress(f, 6, 22);
-  const tagline = progress(f, periodAt + 10, 26);
-  const meta = progress(f, periodAt + 18, 26);
+  const rule = progress(f, 0, 36, ease.inOut);
+  const tagline = progress(f, periodAt + 6, 22);
+  const meta = progress(f, periodAt + 10, 22);
 
   let wordIndex = 0;
   const renderWords = (words: string[]) =>
@@ -62,14 +60,7 @@ export const EndCard: React.FC<{ start?: number; tone?: Tone }> = ({ start = 0, 
 
   return (
     <AbsoluteFill style={{ padding: `${layout.marginY}px ${layout.marginX}px` }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 14, opacity: kicker, transform: `translateY(${(1 - kicker) * 8}px)` }}>
-        <span style={{ width: 7, height: 7, borderRadius: 7, background: colors.accent }} />
-        <span style={{ ...type.kicker, color: c.muted }}>
-          Story {storyNumberLabel(campaign.storyNumber)} — {campaign.sector}
-        </span>
-      </div>
-
-      <div style={{ position: 'absolute', left: layout.marginX, top: 300, ...type.displayL, fontSize: 150, lineHeight: 0.98, letterSpacing: '-0.04em', color: c.text }}>
+      <div style={{ position: 'absolute', left: layout.marginX, top: 250, ...type.displayL, fontSize: 156, lineHeight: 0.98, letterSpacing: '-0.04em', color: c.text }}>
         <div>{renderWords(lineA)}</div>
         <div>
           {renderWords(lineB)}
@@ -94,10 +85,11 @@ export const EndCard: React.FC<{ start?: number; tone?: Tone }> = ({ start = 0, 
           style={{
             position: 'absolute',
             left: layout.marginX,
-            top: 650,
+            top: 610,
             fontFamily: fonts.serif,
             fontStyle: 'italic',
-            fontSize: 46,
+            fontSize: 48,
+            fontWeight: 300,
             lineHeight: 1.2,
             color: c.muted,
             opacity: tagline,
@@ -117,7 +109,7 @@ export const EndCard: React.FC<{ start?: number; tone?: Tone }> = ({ start = 0, 
           {campaign.logo ? (
             <Img src={staticFile(campaign.logo)} style={{ height: 40, objectFit: 'contain' }} />
           ) : (
-            <span style={{ ...type.label, fontSize: 15, color: c.muted }}>{campaign.sector}</span>
+            <span style={{ fontFamily: fonts.sans, fontWeight: 500, fontSize: 30, letterSpacing: '-0.01em', color: c.muted }}>{campaign.sector}</span>
           )}
         </div>
       </div>

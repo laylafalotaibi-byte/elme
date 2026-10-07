@@ -2,6 +2,7 @@ import React from 'react';
 import { Img, staticFile } from 'remotion';
 import { colors, fonts } from '../../campaign/theme';
 import { useStory } from '../../campaign/StoryContext';
+import { PROFILE_HEAD, PROFILE_TORSO } from './silhouettes';
 
 /**
  * The hero's portrait. One component, used every time the film returns to the person.
@@ -22,13 +23,8 @@ const palettes: Record<PortraitLight, { bgCenter: string; bgEdge: string; figTop
   warm: { bgCenter: '#5A4636', bgEdge: '#1C1814', figTop: '#15110E', figBottom: '#0D0B09', rim: '#FFD8B0', rimOpacity: 0.8, fill: '#FFC896', fillOpacity: 0.16, ambient: 'rgba(255,200,150,0.08)' },
 };
 
-// Three-quarter profile, facing right (towards the process). viewBox 400 × 500.
-const HEAD =
-  'M172 84 C128 82 100 116 100 162 C100 196 112 226 132 246 C140 256 146 272 146 300 L206 300 C206 284 212 274 228 270 ' +
-  'C244 268 256 262 261 254 C266 248 268 242 266 236 C270 232 269 227 266 222 C273 219 277 214 275 209 L264 188 ' +
-  'C261 180 258 172 257 162 C255 120 224 86 172 84 Z';
-const TORSO =
-  'M146 294 C142 322 120 334 92 348 C42 376 16 438 10 500 L396 500 C392 468 380 420 352 392 C322 360 258 346 214 330 L206 294 Z';
+const HEAD = PROFILE_HEAD;
+const TORSO = PROFILE_TORSO;
 
 const Silhouette: React.FC<{ light: PortraitLight; id: string }> = ({ light, id }) => {
   const p = palettes[light];

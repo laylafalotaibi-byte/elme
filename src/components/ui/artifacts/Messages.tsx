@@ -28,7 +28,7 @@ export const EmailCard: React.FC<{
     <div style={{ ...surface(tone), width, padding: '20px 22px', ...style }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
         {unread ? <Dot size={6} /> : null}
-        <span style={{ ...type.label, fontSize: 11, color: c.muted }}>{from ? `${from}  →  ${to}` : `To  ${to}`}</span>
+        <span style={{ ...type.label, fontSize: 12, color: c.muted }}>{from ? `${from} · ${to}` : `To  ${to}`}</span>
       </div>
       <div style={{ ...type.body, fontWeight: 500, fontSize: 19, color: c.text, marginTop: 12, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
         {subject}

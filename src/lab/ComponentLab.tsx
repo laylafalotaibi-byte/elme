@@ -1,10 +1,14 @@
 import React from 'react';
 import { AbsoluteFill, Sequence } from 'remotion';
 import { StoryProvider } from '../campaign/StoryContext';
-import { World } from '../components/fx/World';
+import { LIGHT } from '../campaign/light';
 import { FilmFinish } from '../components/fx/Finish';
-import { EmployeePortrait } from '../components/portrait/EmployeePortrait';
-import { NamePlate } from '../components/portrait/NamePlate';
+import { World } from '../components/fx/World';
+import { Workspace } from '../components/set/Workspace';
+import { HeroShot } from '../components/set/HeroShot';
+import { DeskInsert, Pen, Phone, ScreenInsert } from '../components/set/Inserts';
+import { Cursor } from '../components/ui/Cursor';
+import { LowerThird } from '../components/portrait/LowerThird';
 import { Annotation } from '../components/ui/Annotation';
 import { RequestCard } from '../components/ui/RequestCard';
 import { MetricPopup, IndicatorPopup } from '../components/ui/MetricPopup';
@@ -13,52 +17,80 @@ import { EmailCard, FollowUpPing } from '../components/ui/artifacts/Messages';
 import { SystemWindow } from '../components/ui/artifacts/SystemWindow';
 import { FileChip } from '../components/ui/artifacts/FileChip';
 import { EndCard } from '../components/endcard/EndCard';
-import { Kicker } from '../components/typography/Text';
 import { stories } from '../stories';
 
-/** Visual test bench for the shared components (Studio: Lab › Lab-Components). */
+/**
+ * Visual test bench for the shared set pieces and components (Studio: Lab › Lab-Components).
+ * Pages (30 frames each): 0 workspace·day · 1 workspace·dimmed+clutter · 2 hero·dim · 3 hero·warm key + lower third ·
+ * 4 screen insert · 5 desk insert · 6 metrics (draft) · 7 end card · 8 workspace·after
+ */
+const PAGE = 30;
+
 export const ComponentLab: React.FC = () => {
   const { story, metrics } = stories.story01;
   const a = story.before.artifacts;
+  const screenUi = (tone: 'light' | 'dark') => (
+    <>
+      <RequestCard data={story.person.request} x={700} y={40} start={-40} tone={tone} width={540} />
+      <EmailCard to={a.email.to} subject={a.email.subject} preview={a.email.preview} attachment={a.records.fileName} tone={tone} style={{ position: 'absolute', left: 60, top: 60 }} />
+      <SystemWindow {...a.system} typing={0.5} tone={tone} style={{ position: 'absolute', left: 120, top: 330 }} />
+      <Cursor keys={[{ frame: 0, x: 900, y: 600 }]} />
+    </>
+  );
   return (
     <StoryProvider story={story} metrics={metrics} mode="draft">
-      <Sequence durationInFrames={50}>
-        <World kind="before" />
-        <div style={{ position: 'absolute', left: 80, top: 80 }}>
-          <EmployeePortrait width={360} height={450} light="before" />
-          <NamePlate style={{ width: 360, marginTop: 20 }} />
-        </div>
-        <div style={{ position: 'absolute', left: 80, top: 690, display: 'flex', gap: 16 }}>
-          <EmployeePortrait width={170} height={212} light="void" />
-          <EmployeePortrait width={170} height={212} light="warm" />
-        </div>
-        <PaperForm {...a.form} fill={1} sign={1} style={{ position: 'absolute', left: 500, top: 80 }} />
-        <EmailCard {...a.email} attachment={a.files.fileName} style={{ position: 'absolute', left: 900, top: 80 }} />
-        <FollowUpPing {...a.followUp} style={{ position: 'absolute', left: 900, top: 290 }} />
-        <SystemWindow {...a.system} typing={0.6} style={{ position: 'absolute', left: 900, top: 420 }} />
-        <FileChip location={a.files.locations[0]} fileName={a.files.fileName} style={{ position: 'absolute', left: 1460, top: 80 }} />
-        <RequestCard data={story.person.request} x={1300} y={620} start={-40} width={540} />
-        <Annotation text="Risk of Human Error" x={520} y={900} start={-40} leader={{ x: -40, y: -60 }} />
-        <IndicatorPopup label="Time" value="Lost to repetitive work" direction="down" x={1300} y={860} start={-40} />
-        <Kicker text="Story 01 — Corporate Technology" start={-40} rule={160} style={{ position: 'absolute', left: 900, top: 820 }} />
+      <Sequence durationInFrames={PAGE}>
+        <Workspace light={LIGHT.normalDay} screen={screenUi('light')} />
       </Sequence>
-      <Sequence from={50} durationInFrames={50}>
+      <Sequence from={PAGE} durationInFrames={PAGE}>
+        <Workspace
+          light={LIGHT.dimmed}
+          screen={
+            <>
+              {screenUi('light')}
+              <FollowUpPing {...a.followUp} tone="light" style={{ position: 'absolute', left: 820, top: 560 }} />
+            </>
+          }
+          desk={<PaperForm {...a.form} fill={1} sign={1} width={300} style={{ position: 'absolute', left: 1300, top: 900, transform: 'rotate(-6deg)' }} />}
+        />
+        <Annotation text="Risk of Human Error" x={300} y={200} start={-40} />
+        <Annotation text="Multiple Follow-ups" x={300} y={290} start={-40} />
+      </Sequence>
+      <Sequence from={PAGE * 2} durationInFrames={PAGE}>
+        <HeroShot light={LIGHT.dimmed} framing="close" />
+        <IndicatorPopup label="Time" value="Lost to repetitive work" direction="down" x={1100} y={300} start={-40} />
+      </Sequence>
+      <Sequence from={PAGE * 3} durationInFrames={PAGE}>
+        <HeroShot light={LIGHT.warmKey} framing="medium" keyLight={1} />
+        <LowerThird start={-40} />
+      </Sequence>
+      <Sequence from={PAGE * 4} durationInFrames={PAGE}>
+        <ScreenInsert light={LIGHT.normalDay}>{screenUi('light')}</ScreenInsert>
+      </Sequence>
+      <Sequence from={PAGE * 5} durationInFrames={PAGE}>
+        <DeskInsert light={LIGHT.normalDay}>
+          <PaperForm {...a.form} fill={1} sign={0.7} style={{ position: 'absolute', left: 700, top: 200, transform: 'rotate(-3deg)' }} />
+          <Pen x={1160} y={640} />
+          <Phone x={300} y={420} rotate={-10}>
+            <FileChip location={a.records.buckets[1]} fileName={a.records.fileName} width={200} style={{ margin: 10 }} />
+          </Phone>
+        </DeskInsert>
+      </Sequence>
+      <Sequence from={PAGE * 6} durationInFrames={PAGE}>
         <World kind="after" />
-        <div style={{ position: 'absolute', left: 120, top: 120 }}>
-          <EmployeePortrait width={400} height={500} light="after" />
-          <NamePlate tone="light" style={{ width: 400, marginTop: 20 }} />
-        </div>
-        <MetricPopup metricId="timeSaved" x={640} y={140} start={-40} />
-        <MetricPopup metricId="manualSteps" x={640} y={330} start={-40} />
-        <MetricPopup metricId="processingTime" x={640} y={520} start={-40} />
-        <MetricPopup metricId="paper" x={640} y={720} start={-40} />
-        <MetricPopup metricId="records" x={1200} y={140} start={-40} leader={{ x: -80, y: 60 }} />
-        <MetricPopup metricId="sites" x={1200} y={330} start={-40} />
-        <RequestCard data={story.person.request} x={1200} y={620} start={-40} tone="light" resolvedAt={-20} />
+        <MetricPopup metricId="timeSaved" x={200} y={160} start={-40} />
+        <MetricPopup metricId="manualSteps" x={200} y={400} start={-40} />
+        <MetricPopup metricId="paper" x={200} y={660} start={-40} />
+        <MetricPopup metricId="records" x={1000} y={160} start={-40} />
+        <MetricPopup metricId="sites" x={1000} y={400} start={-40} />
+        <MetricPopup metricId="errorRisk" x={1000} y={660} start={-40} />
       </Sequence>
-      <Sequence from={100} durationInFrames={50}>
+      <Sequence from={PAGE * 7} durationInFrames={PAGE}>
         <World kind="void" />
         <EndCard start={-200} />
+      </Sequence>
+      <Sequence from={PAGE * 8} durationInFrames={PAGE}>
+        <Workspace light={LIGHT.afterDay} screen={<RequestCard data={story.person.request} x={700} y={40} start={-40} tone="light" width={540} resolvedAt={-20} />} />
       </Sequence>
       <AbsoluteFill>
         <FilmFinish />

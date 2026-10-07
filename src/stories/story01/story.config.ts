@@ -5,11 +5,15 @@ import type { StoryConfig } from '../../campaign/types';
  * ------------------------------------------------
  * Every on-screen word of Story 01 lives here. Edit copy here, never inside scenes.
  *
- * Facts are taken verbatim from docs/BRIEF.md. Do not add capabilities the brief does not
- * list (e.g. the new workflow does NOT update System 800 automatically, and paper is
- * reduced — not eliminated).
+ * Story copy (lines, annotations, indicators, workflow steps, before/after items, end
+ * card) is verbatim from docs/BRIEF.md. Prop microcopy in `before.artifacts`, the
+ * request card and the after `status` is ADDED and generic — have it approved.
  *
- * *Asterisks* set words in the campaign's human voice (serif italic).
+ * Fact guardrails (docs/BRIEF.md): the new workflow does NOT update System 800
+ * automatically; paper is reduced, not eliminated; REVIEW is a human approve/reject
+ * decision; no number appears unless verified in metrics.config.ts.
+ *
+ * *Asterisks* set words in the human voice (Newsreader italic) — use sparingly.
  */
 export const story01: StoryConfig = {
   id: 'story-01',
@@ -23,24 +27,29 @@ export const story01: StoryConfig = {
     logo: null,
   },
 
-  // Replace with the approved name, title and photo before the final render.
+  // Replace before the final render. name: null → the final film shows no name.
   // Photo: drop the file in public/employee/ and set e.g. photo: 'employee/story01.jpg'.
   employee: {
-    name: '[Employee Name]',
+    name: null,
     title: 'IT Support',
-    team: 'Corporate Technology',
+    team: null,
     photo: null,
-    focalPoint: { x: 0.5, y: 0.34 },
+    focalPoint: { x: 0.38, y: 0.4 },
+  },
+
+  ui: {
+    namePlaceholder: '[Employee Name]',
+    photoPlaceholder: 'PHOTO PLACEHOLDER',
+    toVerify: 'TO VERIFY',
   },
 
   person: {
-    kicker: 'Story 01 — Corporate Technology',
     request: {
       title: 'New device handover request',
       meta: 'Device delivery · Asset registration',
       status: 'Action required',
     },
-    lines: ['Another device handover.', 'Another *manual* process.'],
+    lines: ['Another device handover.', 'Another manual process.'],
   },
 
   before: {
@@ -54,25 +63,17 @@ export const story01: StoryConfig = {
       { label: 'Another Email', artifact: 'anotherEmail' },
       { label: 'Repeat', artifact: 'repeat' },
     ],
-    annotations: [
-      { text: 'Manual', step: 0, delay: 14 },
-      { text: 'Paper-Based', step: 1, delay: 12 },
-      { text: 'Multiple Follow-ups', step: 3, delay: 12 },
-      { text: 'Repeated Daily', step: 7, delay: 6 },
-      { text: 'High Manual Effort', step: 7, delay: 30 },
-      { text: 'Risk of Human Error', step: 7, delay: 52 },
-    ],
+    annotations: ['Manual', 'Repeated Daily', 'Paper-Based', 'Multiple Follow-ups', 'High Manual Effort', 'Risk of Human Error'],
     artifacts: {
       form: {
         title: 'Device Handover Form',
-        fields: ['Employee', 'Device', 'Serial No.', 'Site', 'Date'],
+        fields: ['Employee', 'Device', 'Site'],
         signatureLabel: 'Signature',
       },
       email: {
-        from: 'IT Support',
         to: 'Asset Team',
-        subject: 'Device handover — signed form attached',
-        preview: 'Please find the signed handover form attached.',
+        subject: 'Device handover',
+        preview: 'Handover form completed.',
       },
       followUp: {
         subject: 'Re: Device handover',
@@ -83,24 +84,21 @@ export const story01: StoryConfig = {
         title: 'Asset update',
         fields: [
           { label: 'Asset', value: 'Device' },
-          { label: 'Serial No.', value: '••••••••' },
           { label: 'Assigned to', value: 'Employee' },
-          { label: 'Site', value: '••••' },
+          { label: 'Site', value: 'Site' },
+          { label: 'Status', value: 'Delivered' },
         ],
+        tag: 'Manual entry',
       },
-      files: {
-        title: 'Handover records',
-        locations: ['Email attachments', 'Shared folder', 'Local files'],
-        fileName: 'handover_form_signed.pdf',
+      records: {
+        buckets: ['Emails', 'Files'],
+        fileName: 'handover_form.pdf',
       },
       anotherEmail: {
-        subject: 'Fwd: Re: Device handover',
-        preview: 'Forwarding again for the record.',
+        subject: 'Fwd: Device handover',
+        preview: 'Sharing again for the record.',
       },
-      repeat: {
-        label: 'Repeat',
-        sites: ['Another site', 'Another site', 'Another site'],
-      },
+      siteTag: 'Site',
     },
   },
 
@@ -123,37 +121,27 @@ export const story01: StoryConfig = {
   },
 
   reveal: {
-    lines: ['He was a junior IT Support employee.', 'He had *no previous automation experience.*'],
+    lines: ['He was a junior IT Support employee.', 'He had no previous automation experience.'],
     words: ['LEARN.', 'EXPERIMENT.', 'BUILD.', 'IMPROVE.'],
     support: 'He started learning what he needed to solve the problem himself.',
-    sketchLabels: ['Try', 'Test', 'Adjust', 'Test again'],
   },
 
   workflow: {
-    kicker: 'The new workflow',
     steps: [
-      { label: 'Submit', caption: 'Digital submission' },
-      { label: 'Trigger', caption: 'Workflow starts automatically' },
+      { label: 'Submit' },
+      { label: 'Trigger' },
       { label: 'Review', caption: 'Approve / Reject' },
-      { label: 'Generate Record', caption: 'Required record generated' },
-      { label: 'Centralize', caption: 'One central record' },
-      { label: 'Notify', caption: 'Asset Team & employee' },
+      { label: 'Generate Record' },
+      { label: 'Centralize' },
+      { label: 'Notify' },
     ],
-    // Count is visual only (it reads as "multiple sites"); no site count is shown on screen.
-    sources: { label: 'Site', count: 3, caption: 'Multiple sites' },
+    // No count is shown: the site lines read as "multiple sites".
+    sitesLabel: 'Sites',
     notifyTargets: ['Asset Team', 'Employee'],
   },
 
   after: {
-    progress: [
-      'Submitted digitally',
-      'Workflow triggered',
-      'Reviewed & approved',
-      'Record generated',
-      'Centralized',
-      'Asset Team notified',
-      'Employee notified',
-    ],
+    status: 'Submitted digitally',
     comparison: {
       beforeLabel: 'Before',
       afterLabel: 'After',
@@ -163,11 +151,8 @@ export const story01: StoryConfig = {
   },
 
   impact: {
-    kicker: 'Impact',
-    waves: [
-      ['timeSaved', 'manualSteps', 'processingTime', 'paper'],
-      ['sites', 'records', 'errorRisk', 'manualEmails'],
-    ],
+    inWorkflow: ['sites', 'records'],
+    sequence: ['timeSaved', 'manualSteps', 'processingTime', 'paper', 'manualEmails', 'errorRisk'],
   },
 
   human: {
@@ -177,6 +162,19 @@ export const story01: StoryConfig = {
   final: {
     from: 'MANUAL',
     to: 'AUTOMATED',
-    lines: ['No previous automation experience.', 'Just *curiosity, ownership,* and *the drive to improve.*'],
+    lines: ['No previous automation experience.', 'Just curiosity, ownership, and *the drive to improve.*'],
+  },
+
+  // Off until royalty-free files are supplied in public/audio/. Cues are locked to scene frames.
+  audio: {
+    music: null,
+    musicVolume: 0.5,
+    cues: [
+      { scene: 'person', frame: 36, file: null, note: 'Soft notification tick as the request arrives' },
+      { scene: 'before', frame: 0, file: null, note: 'Ticks quicken with each loop of the old process' },
+      { scene: 'question', frame: 36, file: null, note: 'Hard cut to silence' },
+      { scene: 'reveal', frame: 96, file: null, note: 'A single sustained note enters on “no previous automation experience”' },
+      { scene: 'final', frame: 0, file: null, note: 'Music resolves on the end-card full stop' },
+    ],
   },
 };

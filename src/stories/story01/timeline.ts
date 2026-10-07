@@ -1,21 +1,23 @@
 import type { Timeline } from '../../campaign/types';
+import { validateTimeline } from '../../campaign/timeline';
 
 /**
  * STORY 01 — Timeline (30 fps)
- * Scenes overlap by `transitionIn` frames (cross-dissolve), so the film length is
- * sum(durations) − sum(transitions). Scene-internal beats live in each scene template.
+ * Hard cuts by default; a short dissolve only where time passes. Film length =
+ * Σ durations − Σ dissolve frames. Scene-internal beats are documented in
+ * docs/STORYBOARD.md and implemented in each scene template.
  */
-export const story01Timeline: Timeline = {
+export const story01Timeline: Timeline = validateTimeline({
   scenes: [
-    { id: 'person', previewId: 'S01-Person', durationInFrames: 180, transitionIn: 0 },
-    { id: 'before', previewId: 'S02-Before', durationInFrames: 285, transitionIn: 12 },
-    { id: 'pain', previewId: 'S03-Pain', durationInFrames: 255, transitionIn: 20 },
-    { id: 'question', previewId: 'S04-Question', durationInFrames: 165, transitionIn: 15 },
-    { id: 'reveal', previewId: 'S05-Reveal', durationInFrames: 270, transitionIn: 15 },
-    { id: 'workflow', previewId: 'S06-Workflow', durationInFrames: 240, transitionIn: 15 },
-    { id: 'after', previewId: 'S07-After', durationInFrames: 210, transitionIn: 15 },
-    { id: 'impact', previewId: 'S08-Impact', durationInFrames: 225, transitionIn: 15 },
-    { id: 'human', previewId: 'S09-Human', durationInFrames: 165, transitionIn: 15 },
-    { id: 'final', previewId: 'S10-Final', durationInFrames: 315, transitionIn: 15 },
+    { id: 'person', beat: 'PERSON', previewId: 'S01-Person', durationInFrames: 180, transitionIn: { type: 'cut' } },
+    { id: 'before', beat: 'PROBLEM', previewId: 'S02-Before', durationInFrames: 225, transitionIn: { type: 'cut' } },
+    { id: 'pain', beat: 'PROBLEM', previewId: 'S03-Pain', durationInFrames: 240, transitionIn: { type: 'cut' } },
+    { id: 'question', beat: 'INITIATIVE', previewId: 'S04-Question', durationInFrames: 195, transitionIn: { type: 'cut' } },
+    { id: 'reveal', beat: 'INITIATIVE', previewId: 'S05-Reveal', durationInFrames: 300, transitionIn: { type: 'cut' } },
+    { id: 'workflow', beat: 'BETTER WAY', previewId: 'S06-Workflow', durationInFrames: 210, transitionIn: { type: 'cut' } },
+    { id: 'after', beat: 'BETTER WAY', previewId: 'S07-After', durationInFrames: 210, transitionIn: { type: 'cut' } },
+    { id: 'impact', beat: 'IMPACT', previewId: 'S08-Impact', durationInFrames: 170, transitionIn: { type: 'cut' } },
+    { id: 'human', beat: 'PERSON', previewId: 'S09-Human', durationInFrames: 210, transitionIn: { type: 'fade', frames: 10 } },
+    { id: 'final', beat: 'IMPACT', previewId: 'S10-Final', durationInFrames: 330, transitionIn: { type: 'fade', frames: 10 } },
   ],
-};
+});

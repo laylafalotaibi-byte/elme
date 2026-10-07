@@ -19,7 +19,7 @@ npm run render         # → out/story-01-we-found-a-better-way.mp4 (final)
 npm run render:draft   # → out/story-01-metrics-draft.mp4 (shows [X] metric placeholders)
 ```
 
-Specs: 1920×1080 · 16:9 · 30 fps · ≈72 s. Fonts (SIL OFL) are bundled in `public/fonts`.
+Specs: 1920×1080 · 16:9 · 30 fps · 75.0 s (validated in code to stay within 60–75 s). Fonts (SIL OFL) are bundled in `public/fonts`.
 No paid assets, stock footage or product logos are used.
 
 ## Editing Story 01

@@ -50,7 +50,7 @@ export const RemotionRoot: React.FC = () => (
       ))}
     </Folder>
     <Folder name="Lab">
-      <Composition id="Lab-Components" component={ComponentLab} durationInFrames={150} fps={VIDEO.fps} width={VIDEO.width} height={VIDEO.height} />
+      <Composition id="Lab-Components" component={ComponentLab} durationInFrames={270} fps={VIDEO.fps} width={VIDEO.width} height={VIDEO.height} />
     </Folder>
   </>
 );
