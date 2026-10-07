@@ -8,7 +8,7 @@ import { DeskInsert } from '../components/set/Inserts';
 import { MaskedReveal } from '../components/typography/Reveal';
 import { ManualPile, PILE_LINE, PILE_POOL } from './final/ManualPile';
 import { PaperWorld } from './final/PaperWorld';
-import { EndCardPaced } from './final/EndCardPaced';
+import { EndCard } from '../components/endcard/EndCard';
 import { RichLine } from './final/RichLine';
 import { splitLines } from './final/lines';
 import { S10 } from './final/timing';
@@ -111,7 +111,7 @@ export const FinalScene: React.FC<SceneProps> = () => {
   if (frame >= S10.cutToInk) {
     return (
       <AbsoluteFill style={{ backgroundColor: colors.ink }}>
-        <EndCardPaced start={S10.endCard} />
+        <EndCard start={S10.endCard} />
       </AbsoluteFill>
     );
   }

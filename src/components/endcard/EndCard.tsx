@@ -1,5 +1,5 @@
 import React from 'react';
-import { AbsoluteFill, useCurrentFrame, useVideoConfig, Img, staticFile } from 'remotion';
+import { AbsoluteFill, Img, staticFile, useCurrentFrame, useVideoConfig } from 'remotion';
 import { colors, fonts, layout, toneColors, type, type Tone } from '../../campaign/theme';
 import { ease, progress, springAt, springs } from '../../campaign/motion';
 import { useStory } from '../../campaign/StoryContext';
@@ -13,10 +13,34 @@ import { MaskedReveal } from '../typography/Reveal';
  *   BETTER WAY.            ← full stop in accent orange, lands last
  *   Small improvements can create meaningful impact.
  *   ───────────────────────────────────────────────
- *   01                                Corporate Technology
+ *   Story 01                          Corporate Technology
+ *
+ * Paced to the design system (§10): the whole card builds in ≤ 35 f, then holds still.
+ *   0       the rule starts to draw (30 f)
+ *   2 → 32  the line rises word by word (3 f stagger, 18 f each)
+ *   +8      the orange full stop lands after the last word starts (spring)
+ *   then    tagline, and Story / sector 2 f later (12 f each)
  */
 
 export const storyNumberLabel = (n: number) => String(n).padStart(2, '0');
+
+const PACE = {
+  rule: 30,
+  wordStart: 2,
+  wordStagger: 3,
+  wordDur: 18,
+  /** Full stop, after the last word starts. */
+  periodAfter: 8,
+  tagline: { after: 0, dur: 12 },
+  meta: { after: 2, dur: 12 },
+} as const;
+
+/** Frames from `start` until every part of the card is still. */
+export const endCardBuild = (wordCount: number) => {
+  const lastWordAt = PACE.wordStart + (wordCount - 1) * PACE.wordStagger;
+  const periodAt = lastWordAt + PACE.periodAfter;
+  return Math.max(lastWordAt + PACE.wordDur, periodAt + PACE.meta.after + PACE.meta.dur, periodAt + 12, PACE.rule);
+};
 
 /** Split the campaign line into two balanced lines (longer line first). */
 const splitLine = (line: string): [string[], string[]] => {
@@ -35,22 +59,20 @@ export const EndCard: React.FC<{ start?: number; tone?: Tone }> = ({ start = 0, 
 
   const [lineA, lineB] = splitLine(campaign.endLine);
   const hasPeriod = campaign.endLine.trim().endsWith('.');
-  const wordStart = 10;
-  const wordStagger = 4;
-  const lastWordAt = wordStart + (lineA.length + lineB.length - 1) * wordStagger;
-  const periodAt = lastWordAt + 12;
+  const lastWordAt = PACE.wordStart + (lineA.length + lineB.length - 1) * PACE.wordStagger;
+  const periodAt = lastWordAt + PACE.periodAfter;
   const period = springAt(f, fps, periodAt, springs.busy);
-  const rule = progress(f, 0, 36, ease.inOut);
-  const tagline = progress(f, periodAt + 6, 22);
-  const meta = progress(f, periodAt + 10, 22);
+  const rule = progress(f, 0, PACE.rule, ease.inOut);
+  const tagline = progress(f, periodAt + PACE.tagline.after, PACE.tagline.dur);
+  const meta = progress(f, periodAt + PACE.meta.after, PACE.meta.dur);
 
   let wordIndex = 0;
   const renderWords = (words: string[]) =>
     words.map((w, i) => {
-      const at = start + wordStart + wordIndex++ * wordStagger;
+      const at = start + PACE.wordStart + wordIndex++ * PACE.wordStagger;
       return (
         <React.Fragment key={`${w}-${i}`}>
-          <MaskedReveal start={at} duration={24}>
+          <MaskedReveal start={at} duration={PACE.wordDur}>
             {w}
           </MaskedReveal>
           {i < words.length - 1 ? ' ' : null}

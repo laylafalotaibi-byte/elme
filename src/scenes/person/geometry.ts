@@ -1,4 +1,4 @@
-import { MONITOR, SCREEN_SCALE } from '../../components/set/Workspace';
+import { screenToFrame } from '../../components/set/Workspace';
 import { REQUEST_SLOT } from '../before/shared';
 
 /**
@@ -72,23 +72,8 @@ export const statusEndPoint = (text: string): Pt => ({
 
 /* ------------------------------------------------------------ projection */
 
-const PERSPECTIVE = 2600;
-const ROTATE_Y = (-5 * Math.PI) / 180;
-const ORIGIN: Pt = { x: MONITOR.x, y: MONITOR.y + MONITOR.h / 2 };
-
-/**
- * Screen canvas point → frame point, the way <Workspace> actually draws its monitor
- * (`perspective(2600px) rotateY(-5deg)` about its left-centre). The right side of the
- * screen is nearer the lens, so pins on the request card need this, not screenToFrame.
- */
-export const screenPoint = (p: Pt): Pt => {
-  const mx = MONITOR.bezel + p.x * SCREEN_SCALE;
-  const my = MONITOR.bezel + p.y * SCREEN_SCALE - MONITOR.h / 2;
-  const x1 = mx * Math.cos(ROTATE_Y);
-  const z1 = -mx * Math.sin(ROTATE_Y);
-  const w = 1 - z1 / PERSPECTIVE;
-  return { x: ORIGIN.x + x1 / w, y: ORIGIN.y + my / w };
-};
+/** Screen canvas point → frame point (perspective-correct; shared with <Workspace>). */
+export const screenPoint = (p: Pt): Pt => screenToFrame(p);
 
 /* ------------------------------------------------------------ camera */
 

@@ -25,7 +25,7 @@ export const Signature: React.FC<{ draw: number; width?: number; height?: number
   color = '#1F2A44',
   strokeWidth = 2.2,
 }) => (
-  <svg width={width} height={height} viewBox="0 0 200 64" style={{ overflow: 'visible', display: 'block' }}>
+  <svg width={width} height={height} viewBox="0 0 200 64" style={{ overflow: 'visible', display: 'block', opacity: draw > 0 ? 1 : 0 }}>
     <path
       d={SIGNATURE_PATH}
       pathLength={1}
@@ -85,7 +85,7 @@ export const PaperForm: React.FC<{
                   strokeLinecap="round"
                   strokeDasharray={1}
                   strokeDashoffset={1 - local}
-                  opacity={0.85}
+                  opacity={local > 0 ? 0.85 : 0}
                 />
               </svg>
             </div>

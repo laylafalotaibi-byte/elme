@@ -31,7 +31,10 @@ export const HERO_TEXT_SAFE: Record<HeroFraming, { x: number; y: number; w: numb
 export const HeroShot: React.FC<{
   light: Light;
   framing?: HeroFraming;
-  /** Warm front key light on his face, 0…1 (Scene 05: his decision brings the light). */
+  /**
+   * Warm front key light on his face (Scene 05: his decision brings the light). 0 = rim only,
+   * 1 = a soft key; values up to ~2.5 read as a strong key on the silhouette placeholder.
+   */
   keyLight?: number;
   /** Rack focus: blur on the person in px. */
   blur?: number;
@@ -91,26 +94,26 @@ export const HeroShot: React.FC<{
                 <stop offset="0.7" stopColor="#FFD3A6" stopOpacity={0.06 * keyLight} />
                 <stop offset="1" stopColor="#FFD3A6" stopOpacity={0} />
               </radialGradient>
-              <filter id={`${id}-keysoft`} x="-20%" y="-20%" width="140%" height="140%">
+              <filter id={`${id}-keysoft`} colorInterpolationFilters="sRGB" x="-20%" y="-20%" width="140%" height="140%">
                 <feGaussianBlur stdDeviation={6 / f.scale} />
               </filter>
               {/* Organic edge: breaks the perfect vector outline so it reads as a photographed figure. */}
-              <filter id={`${id}-soft`} x="-10%" y="-10%" width="120%" height="120%">
+              <filter id={`${id}-soft`} colorInterpolationFilters="sRGB" x="-10%" y="-10%" width="120%" height="120%">
                 <feTurbulence type="fractalNoise" baseFrequency="0.045" numOctaves={2} seed={4} result="noise" />
                 <feDisplacementMap in="SourceGraphic" in2="noise" scale={3.2} xChannelSelector="R" yChannelSelector="G" result="displaced" />
                 <feGaussianBlur in="displaced" stdDeviation={(1.6 + blur) / f.scale} />
               </filter>
               {/* Rim light from the screen on his right-facing edge — thin, scale-aware. */}
-              <filter id={`${id}-rim`} x="-10%" y="-10%" width="120%" height="120%">
+              <filter id={`${id}-rim`} colorInterpolationFilters="sRGB" x="-10%" y="-10%" width="120%" height="120%">
                 <feTurbulence type="fractalNoise" baseFrequency="0.045" numOctaves={2} seed={4} result="noise" />
                 <feDisplacementMap in="SourceAlpha" in2="noise" scale={3.2} xChannelSelector="R" yChannelSelector="G" result="alpha" />
                 <feOffset in="alpha" dx={-5 / f.scale} dy={1.5 / f.scale} result="shifted" />
                 <feComposite in="alpha" in2="shifted" operator="out" result="edge" />
                 <feGaussianBlur in="edge" stdDeviation={2.2 / f.scale} result="edgeBlur" />
-                <feFlood floodColor={pal.screen} floodOpacity={(0.3 + 0.35 * screenGlow * (1 - light.exposure * 0.5)) * (1 - keyLight * 0.4)} />
+                <feFlood floodColor={pal.screen} floodOpacity={Math.max(0, (0.3 + 0.35 * screenGlow * (1 - light.exposure * 0.5)) * (1 - Math.min(1, keyLight) * 0.4))} />
                 <feComposite in2="edgeBlur" operator="in" />
               </filter>
-              <filter id={`${id}-bokeh`} x="-30%" y="-30%" width="160%" height="160%">
+              <filter id={`${id}-bokeh`} colorInterpolationFilters="sRGB" x="-30%" y="-30%" width="160%" height="160%">
                 <feGaussianBlur stdDeviation="38" />
               </filter>
               <clipPath id={`${id}-clip`}>

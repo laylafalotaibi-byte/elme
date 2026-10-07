@@ -141,7 +141,8 @@ restarts in 02. Dissolves (≤ 10 f) only where time passes (into 09 and 10). Th
 wipe** is reserved for two moments: the Scene 07 split and Scene 10's MANUAL → AUTOMATED.
 
 **Timing rules:** text appears only after any incoming dissolve and is fully revealed ≥ 10 f
-before a cut; after a line lands it holds ≥ 1.5 s + 0.25 s per word; one new element at a time.
+before a cut; from the start of its reveal a line stays on screen ≥ (words ÷ 3.5) s + 0.4 s,
+key moments longer; one new element at a time.
 
 **Finish:** subtle film grain (four seeded tiles, changing every 3 frames, ≤ 5 % opacity) and a
 light vignette over the whole film.
@@ -175,7 +176,8 @@ Springy entrance. They accumulate in Scene 02 — that accumulation *is* the mul
    qualitative value.
 
 **Anatomy:** bracket draws → label → value rises from a mask → optional leader draws (whole
-build ≤ 24 f). No card background, no dashboard chrome, max width ≈ 520 px. Pop-ups are pinned
+build ≤ 24 f). `align="right"` mirrors it (┐, right-aligned) for pop-ups sitting to the left of
+their object. No card background, no dashboard chrome, max width ≈ 520 px. Pop-ups are pinned
 to *process objects* (never to his body), sequenced one at a time, at most two on screen.
 
 ---

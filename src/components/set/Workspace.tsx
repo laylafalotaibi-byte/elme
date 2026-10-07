@@ -31,11 +31,24 @@ export const frameOn = (rect: { x: number; y: number; w: number; h: number }, pa
   return { scale, x: (960 - cx) * scale, y: (540 - cy) * scale };
 };
 
-/** Map a point on the screen canvas to workspace (frame) coordinates. */
-export const screenToFrame = (p: { x: number; y: number }) => ({
-  x: SCREEN_RECT.x + p.x * SCREEN_SCALE,
-  y: SCREEN_RECT.y + p.y * SCREEN_SCALE,
-});
+/** The monitor's tilt, applied about its left-centre (see the monitor <div> below). */
+const MONITOR_PERSPECTIVE = 2600;
+const MONITOR_ROTATE_Y = -5;
+
+/**
+ * Map a point on the 1280×800 screen canvas to frame coordinates exactly as the monitor
+ * is drawn (perspective(2600px) rotateY(-5deg) about its left-centre — the right side of
+ * the screen is nearer the lens). Use it to pin leaders and pop-ups to on-screen objects.
+ */
+export const screenToFrame = (p: { x: number; y: number }) => {
+  const rad = (MONITOR_ROTATE_Y * Math.PI) / 180;
+  const mx = MONITOR.bezel + p.x * SCREEN_SCALE;
+  const my = MONITOR.bezel + p.y * SCREEN_SCALE - MONITOR.h / 2;
+  const x1 = mx * Math.cos(rad);
+  const z1 = -mx * Math.sin(rad);
+  const w = 1 - z1 / MONITOR_PERSPECTIVE;
+  return { x: MONITOR.x + x1 / w, y: MONITOR.y + MONITOR.h / 2 + my / w };
+};
 
 export const Workspace: React.FC<{
   light: Light;
@@ -139,7 +152,7 @@ export const Workspace: React.FC<{
           borderRadius: 14,
           background: '#0E0F11',
           boxShadow: `0 0 0 1px rgba(255,255,255,0.06), 0 40px 80px -30px rgba(0,0,0,${0.35 + dimness * 0.4})`,
-          transform: 'perspective(2600px) rotateY(-5deg)',
+          transform: `perspective(${MONITOR_PERSPECTIVE}px) rotateY(${MONITOR_ROTATE_Y}deg)`,
           transformOrigin: 'left center',
           filter: screenBlur ? `blur(${screenBlur}px)` : undefined,
         }}
@@ -202,7 +215,7 @@ export const Workspace: React.FC<{
               <stop offset="0.8" stopColor={pal.figure} />
               <stop offset="1" stopColor={pal.desk} />
             </linearGradient>
-            <filter id="ots-rim" x="-10%" y="-10%" width="120%" height="120%">
+            <filter id="ots-rim" x="-10%" y="-10%" width="120%" height="120%" colorInterpolationFilters="sRGB">
               <feOffset in="SourceAlpha" dx="-9" dy="3" result="shifted" />
               <feComposite in="SourceAlpha" in2="shifted" operator="out" result="edge" />
               <feGaussianBlur in="edge" stdDeviation="3" result="edgeBlur" />

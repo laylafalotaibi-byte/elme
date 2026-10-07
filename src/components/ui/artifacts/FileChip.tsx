@@ -6,7 +6,8 @@ import { colors, fonts, shadows, toneColors, type, type Tone } from '../../../ca
  * Several FileChips scattered apart = fragmented records.
  */
 export const FileChip: React.FC<{
-  location: string;
+  /** Where the record sits (folder tab). Omit or pass '' for a single, centralized record. */
+  location?: string;
   fileName: string;
   tone?: Tone;
   width?: number;
@@ -19,26 +20,28 @@ export const FileChip: React.FC<{
   return (
     <div style={{ width, position: 'relative', paddingTop: 14, ...style }}>
       {/* folder tab */}
+      {location ? (
+        <div
+          style={{
+            position: 'absolute',
+            left: 0,
+            top: 0,
+            height: 18,
+            padding: '0 12px',
+            borderRadius: '6px 6px 0 0',
+            background: surface,
+            boxShadow: `0 0 0 1px ${edge}`,
+            clipPath: 'inset(-2px -2px 0 -2px)',
+            display: 'flex',
+            alignItems: 'center',
+          }}
+        >
+          <span style={{ ...type.label, fontSize: 9, color: c.muted }}>{location}</span>
+        </div>
+      ) : null}
       <div
         style={{
-          position: 'absolute',
-          left: 0,
-          top: 0,
-          height: 18,
-          padding: '0 12px',
-          borderRadius: '6px 6px 0 0',
-          background: surface,
-          boxShadow: `0 0 0 1px ${edge}`,
-          clipPath: 'inset(-2px -2px 0 -2px)',
-          display: 'flex',
-          alignItems: 'center',
-        }}
-      >
-        <span style={{ ...type.label, fontSize: 9, color: c.muted }}>{location}</span>
-      </div>
-      <div
-        style={{
-          borderRadius: '0 8px 8px 8px',
+          borderRadius: location ? '0 8px 8px 8px' : 8,
           background: surface,
           boxShadow: `0 0 0 1px ${edge}, ${dark ? shadows.dark : shadows.light}`,
           padding: '14px 16px',

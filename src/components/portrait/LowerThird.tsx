@@ -32,7 +32,8 @@ export const LowerThird: React.FC<{
         <div style={{ width: 2, background: colors.accent, transform: `scaleY(${rule})`, transformOrigin: 'top' }} />
         <div style={{ opacity: text, transform: `translateY(${(1 - text) * 8}px)` }}>
           {name ? <div style={{ fontFamily: fonts.sans, fontWeight: 500, fontSize: 36, letterSpacing: '-0.015em', color: c.text }}>{name}</div> : null}
-          <div style={{ ...type.label, color: c.muted, marginTop: name ? 10 : 0 }}>{role}</div>
+          {/* with no approved name the role stands alone, so it takes the primary colour */}
+          <div style={{ ...type.label, fontSize: name ? 20 : 22, color: name ? c.muted : c.text, marginTop: name ? 10 : 0 }}>{role}</div>
         </div>
       </div>
     </div>

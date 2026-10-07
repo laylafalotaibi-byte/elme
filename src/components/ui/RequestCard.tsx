@@ -18,10 +18,11 @@ export const RequestCard: React.FC<{
   width?: number;
   /** Replace the status chip with a resolved tick at this frame. */
   resolvedAt?: number;
+  /** Text shown in place of the status chip once resolved (pass copy from the story config). */
   resolvedLabel?: string;
   busy?: boolean;
   style?: React.CSSProperties;
-}> = ({ data, x, y, start, tone = 'dark', width = 540, resolvedAt, resolvedLabel = 'Done', busy = false, style }) => {
+}> = ({ data, x, y, start, tone = 'dark', width = 540, resolvedAt, resolvedLabel = '', busy = false, style }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const s = springAt(frame, fps, start, busy ? springs.busy : springs.calm);
@@ -73,10 +74,7 @@ export const RequestCard: React.FC<{
           ) : null}
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 16 }}>
-            <div style={{ ...type.body, fontWeight: 500, color: c.text, fontSize: 23 }}>{data.title}</div>
-            <div style={{ ...type.label, fontSize: 11, color: c.muted }}>Now</div>
-          </div>
+          <div style={{ ...type.body, fontWeight: 500, color: c.text, fontSize: 23 }}>{data.title}</div>
           <div style={{ ...type.label, fontSize: 12, color: c.muted, marginTop: 10, letterSpacing: '0.1em' }}>{data.meta}</div>
           <div style={{ marginTop: 16, display: 'flex', gap: 10 }}>
             <span
@@ -92,7 +90,7 @@ export const RequestCard: React.FC<{
                 boxShadow: resolved > 0.5 ? `0 0 0 1px ${c.line}` : undefined,
               }}
             >
-              {resolved > 0.5 ? resolvedLabel : data.status}
+              {resolved > 0.5 ? resolvedLabel || data.status : data.status}
             </span>
           </div>
         </div>

@@ -34,6 +34,12 @@ export type MetricPopupProps = {
   caption?: string;
   valueSize?: number;
   width?: number;
+  /**
+   * 'left' (default): ┌ bracket top-left, text left-aligned, leader from the top-left corner.
+   * 'right': mirrored ┐ — bracket top-right, text right-aligned, leader from the top-right
+   * corner — for pop-ups that sit to the LEFT of the object they describe.
+   */
+  align?: 'left' | 'right';
 };
 
 const Value: React.FC<{ metric: ResolvedMetric; size: number; color: string; muted: string; p: number }> = ({ metric, size, color, muted, p }) => {
@@ -76,6 +82,7 @@ export const MetricPopup: React.FC<MetricPopupProps> = ({
   caption,
   valueSize = 56,
   width = 520,
+  align = 'left',
 }) => {
   const frame = useCurrentFrame();
   const { metrics, mode, story } = useStory();
@@ -90,27 +97,29 @@ export const MetricPopup: React.FC<MetricPopupProps> = ({
   if (frame < start) return null;
 
   const isPlaceholder = metric.status === 'placeholder';
+  const right = align === 'right';
+  const originX = right ? width : 0;
 
   return (
     <div style={{ position: 'absolute', left: x, top: y, width, opacity: 1 - exit, transform: `translateY(${-8 * exit}px)` }}>
       {leader ? (
         <svg style={{ position: 'absolute', left: 0, top: 0, overflow: 'visible', pointerEvents: 'none' }} width={1} height={1}>
-          <line x1={0} y1={0} x2={leader.x * lead} y2={leader.y * lead} stroke={c.faint} strokeWidth={1} />
-          {lead > 0.98 ? <circle cx={leader.x} cy={leader.y} r={3} fill={intent === 'before' ? colors.accent : c.text} /> : null}
+          <line x1={originX} y1={0} x2={originX + leader.x * lead} y2={leader.y * lead} stroke={c.faint} strokeWidth={1} />
+          {lead > 0.98 ? <circle cx={originX + leader.x} cy={leader.y} r={3} fill={intent === 'before' ? colors.accent : c.text} /> : null}
         </svg>
       ) : null}
-      <div style={{ position: 'absolute', left: 0, top: 0, color: intent === 'before' ? colors.accent : c.muted }}>
-        <CornerBracket size={16} draw={bracket} color="currentColor" strokeWidth={1.5} />
+      <div style={{ position: 'absolute', [right ? 'right' : 'left']: 0, top: 0, color: intent === 'before' ? colors.accent : c.muted }}>
+        <CornerBracket size={16} draw={bracket} color="currentColor" strokeWidth={1.5} mirror={right} />
       </div>
-      <div style={{ paddingLeft: 28, paddingTop: 0 }}>
+      <div style={{ [right ? 'paddingRight' : 'paddingLeft']: 28, paddingTop: 0, textAlign: right ? 'right' : 'left' }}>
         {metric.label ? (
-          <div style={{ ...type.label, color: c.muted, opacity: label, transform: `translateX(${(1 - label) * -6}px)`, marginTop: -3 }}>{metric.label}</div>
+          <div style={{ ...type.label, color: c.muted, opacity: label, transform: `translateX(${(1 - label) * (right ? 6 : -6)}px)`, marginTop: -3 }}>{metric.label}</div>
         ) : null}
         <div style={{ marginTop: metric.label ? 14 : -4 }}>
           <Value metric={metric} size={valueSize} color={c.text} muted={c.muted} p={value} />
         </div>
         {isPlaceholder && mode === 'draft' ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 10, opacity: value }}>
+          <div style={{ display: 'flex', justifyContent: right ? 'flex-end' : 'flex-start', alignItems: 'center', gap: 10, marginTop: 10, opacity: value }}>
             <span style={{ height: 0, width: 120, borderTop: `1px dashed ${colors.accent}` }} />
             <span style={{ fontFamily: fonts.mono, fontSize: 14, letterSpacing: '0.14em', color: colors.accent, border: `1px solid ${colors.accent}`, padding: '4px 8px' }}>
               {story.ui.toVerify}

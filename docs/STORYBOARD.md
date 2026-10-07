@@ -45,8 +45,10 @@ Durations live in `src/stories/story01/timeline.ts` (validated in code: 60–75 
 
 Σ 2,270 f − 20 f of dissolve overlap = **2,250 f = 75.0 s**.
 
-**Reading rule.** After a line is fully revealed it holds ≥ 1.5 s + 0.25 s per word (key moments
-longer). Nothing is mid-reveal at a cut or inside a dissolve. One new thing at a time.
+**Reading rule.** From the moment a line starts to reveal, it stays on screen for at least
+(words ÷ 3.5) s + 0.4 s; the key moments (the Question, "no previous automation experience",
+"a better way", the end card) hold longer. Nothing is mid-reveal within 10 frames of a cut or
+inside a dissolve. One new thing at a time.
 
 ---
 

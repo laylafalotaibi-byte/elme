@@ -173,7 +173,7 @@ export const story01: StoryConfig = {
       { scene: 'person', frame: 36, file: null, note: 'Soft notification tick as the request arrives' },
       { scene: 'before', frame: 0, file: null, note: 'Ticks quicken with each loop of the old process' },
       { scene: 'question', frame: 36, file: null, note: 'Hard cut to silence' },
-      { scene: 'reveal', frame: 96, file: null, note: 'A single sustained note enters on “no previous automation experience”' },
+      { scene: 'reveal', frame: 110, file: null, note: 'A single sustained note enters on “no previous automation experience”' },
       { scene: 'final', frame: 0, file: null, note: 'Music resolves on the end-card full stop' },
     ],
   },

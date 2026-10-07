@@ -43,11 +43,17 @@ export const Check: React.FC<GlyphProps> = ({ size = 16, color = colors.accent, 
   </svg>
 );
 
-/** The ┌ corner bracket used on metric pop-ups and annotations. */
-export const CornerBracket: React.FC<{ size?: number; color?: string; draw?: number; strokeWidth?: number }> = ({ size = 14, color = 'currentColor', draw = 1, strokeWidth = 1.2 }) => (
+/** The ┌ corner bracket used on metric pop-ups (mirror → ┐). */
+export const CornerBracket: React.FC<{ size?: number; color?: string; draw?: number; strokeWidth?: number; mirror?: boolean }> = ({
+  size = 14,
+  color = 'currentColor',
+  draw = 1,
+  strokeWidth = 1.2,
+  mirror = false,
+}) => (
   <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ overflow: 'visible', display: 'block' }}>
     <polyline
-      points={`0,${size} 0,0 ${size},0`}
+      points={mirror ? `${size},${size} ${size},0 0,0` : `0,${size} 0,0 ${size},0`}
       fill="none"
       stroke={color}
       strokeWidth={strokeWidth}

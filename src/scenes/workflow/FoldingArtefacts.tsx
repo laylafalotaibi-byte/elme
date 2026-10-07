@@ -89,7 +89,8 @@ export const FoldingArtefacts: React.FC<{ nodes: Pt[] }> = ({ nodes }) => {
         const dup = i === 0 ? 1 : 1 - span(frame, [S06.filesMerge[1] - 4, S06.filesMerge[1]]);
         return (
           <Placed key={i} {...merged} opacity={filesIn * dup}>
-            <FileChip location={a.records.buckets[i % a.records.buckets.length]} fileName={a.records.fileName} tone="light" width={260} />
+            {/* once merged, the surviving record has no BEFORE location: it is the one central record */}
+            <FileChip location={i === 0 && merge > 0.6 ? '' : a.records.buckets[i % a.records.buckets.length]} fileName={a.records.fileName} tone="light" width={260} />
           </Placed>
         );
       })}

@@ -84,6 +84,7 @@ export const ComponentLab: React.FC = () => {
         <MetricPopup metricId="records" x={1000} y={160} start={-40} />
         <MetricPopup metricId="sites" x={1000} y={400} start={-40} />
         <MetricPopup metricId="errorRisk" x={1000} y={660} start={-40} />
+        <MetricPopup metricId="processingTime" x={1180} y={860} start={-40} align="right" width={520} leader={{ x: 60, y: 40 }} />
       </Sequence>
       <Sequence from={PAGE * 7} durationInFrames={PAGE}>
         <World kind="void" />
