@@ -1,4 +1,3 @@
-import type { Cam } from './geometry';
 
 /**
  * Beats for Scenes 08–10 (local frames, 30 fps). Source: docs/STORYBOARD.md (v2).
@@ -8,26 +7,24 @@ import type { Cam } from './geometry';
 
 /** Scene 08 — Impact (170 f, hard cut in; the last 10 f are inside the dissolve to 09). */
 export const S08 = {
-  /** First pop-up — 10 f clear of the incoming cut. */
+  /** First pop-up — 10 f clear of the cut from Scene 07. */
   first: 10,
-  /**
-   * Pop-up spacing. Storyboard: 26 f; 22 f here so the sixth (10 + 5 × 22 = 120) is fully
-   * built — value and leader — by 148, ≥ 12 f before the outgoing dissolve starts (160).
-   */
+  /** One pop-up every 22 f; at most two on screen. */
   spacing: 22,
-  /**
-   * The oldest pop-up starts to leave this many frames before the third one arrives (its
-   * 14 f ease-in exit is still mostly visible then, so this keeps two on screen, not three).
-   */
-  exitLead: 6,
-  /** One slow, even drift on the picture only (linear: it is already moving at the cut). */
-  cam: {
-    from: { scale: 1.035, x: 40, y: 8 } satisfies Cam,
-    to: { scale: 1.075, x: -60, y: -10 } satisfies Cam,
-  },
+  /** The oldest pop-up finishes its 14 f exit before the third one arrives. */
+  exitLead: 14,
+  /** Everything has left by this frame — Scene 09 dips in over the last 10 f. */
+  clearBy: 158,
 } as const;
 
 export const s08Start = (i: number) => S08.first + i * S08.spacing;
+
+/** When pop-up i starts to leave: before pop-up i + 2 arrives, and always before the dip. */
+export const s08Exit = (i: number, count: number) => {
+  const beforeThird = i + 2 < count ? s08Start(i + 2) - S08.exitLead : Infinity;
+  const lastExit = S08.clearBy - 14 - (count - 1 - i) * 6;
+  return Math.min(beforeThird, lastExit);
+};
 
 /**
  * Scene 09 — The Human Outcome (210 f). Enters on a 10 f dip to warm paper (in the dark

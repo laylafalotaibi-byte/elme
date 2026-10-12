@@ -7,8 +7,10 @@ import { useStory } from '../campaign/StoryContext';
 import { BeforeClutter, DESK_PILE } from './before/BeforeSet';
 import { CLUTTER, typedFieldRect } from './before/ClutterScreen';
 import { CompareChip, SideLabel, type ChipSpec } from './person/CompareChip';
-import { AFTER_LAYOUT, cardPoint, OPENING_CAM, SCREEN_LAYOUT, camTransform, screenPoint, statusEndPoint, type Pt } from './person/geometry';
-import { DESK_SHEET, OpeningWorkspace } from './person/OpeningSet';
+import { AFTER_LAYOUT, AFTER_POINTER_HOME, cardPoint, OPENING_CAM, SCREEN_LAYOUT, camTransform, reviewOptionCenter, screenPoint, statusEndPoint, type Pt } from './person/geometry';
+import { DESK_SHEET, OpeningWorkspace, type AfterFlowState } from './person/OpeningSet';
+import { reviewDecision } from '../campaign/copy';
+import type { StoryConfig } from '../campaign/types';
 import { S07 } from './person/timing';
 import type { SceneProps } from './types';
 
@@ -18,19 +20,18 @@ import type { SceneProps } from './types';
  * A match cut of Scene 01's opening: the same framing, the same request, the same moment —
  * a different experience.
  *
- *   0–18     Workspace, exactly Scene 01's framing, a little warmer. The same request lands
- *            in the same place (2); his hand reaches it as it settles.
- *   18       One click, on the request.
- *   19–37    A single calm status resolves: "Submitted digitally". No tick cascade.
- *   25–42    His thin orange line runs from the request straight down into one record.
- *   42–56    Stillness. A quiet screen, a clear desk. Nothing happens.
- *   56–74    One orange line wipes across the same shot → split screen:
- *            LEFT = Scene 02's final cluttered frame (dim, restless), RIGHT = this calm frame.
- *   70       Small Before / After labels.
- *   78–187   Comparison chips pinned to real objects, alternating sides, one at a time
- *            (11 f apart); earlier chips step back. Two separate groups, no row pairing,
- *            no arrows between sides. System 800 only ever on the BEFORE side.
- *   → 210    Hold.
+ *   0–18     The same request lands in the same place; his hand reaches it as it settles.
+ *   18       One click: "Submitted digitally".
+ *   24–58    His line runs down to the review node; the options appear and a person decides
+ *            (a click on "Approve" at 58) — approval is never automatic.
+ *   58–82    Only then does the line continue and the one record get generated.
+ *   82–92    Stillness.
+ *   92–110   One orange line wipes across the same shot → split screen
+ *            (LEFT = Scene 02's final cluttered frame, RIGHT = this calm frame).
+ *   108–188  Comparison chips in pairs, one on each side, never aligned or linked.
+ *            System 800 only ever on the BEFORE side.
+ *   192–208  The split folds away: chips fade, the line slides off to the left and the calm
+ *            frame fills the screen — Scene 08 continues from exactly this frame.
  */
 
 /** Horizontal offset of each picture inside its half of the split (frame px). */
@@ -72,10 +73,10 @@ const beforePins = () => {
 /* -------------------------------------------------------------- AFTER pins */
 
 const afterPins = (status: string) => {
-  const { line, record } = AFTER_LAYOUT;
+  const { line1, record } = AFTER_LAYOUT;
   return {
     submission: shift(screenPoint(statusEndPoint(status)), DX_AFTER),
-    flow: shift(screenPoint({ x: line.x, y: (line.y1 + line.y2) / 2 + 10 }), DX_AFTER),
+    flow: shift(screenPoint({ x: line1.x, y: (line1.y1 + line1.y2) / 2 + 10 }), DX_AFTER),
     record: shift(screenPoint({ x: record.x + record.w, y: record.y + record.h * 0.45 }), DX_AFTER),
     notifications: shift(screenPoint({ x: cardPoint.dot.x + 40, y: SCREEN_LAYOUT.request.y }), DX_AFTER),
     desk: shift({ x: DESK_SHEET.x + 40, y: DESK_SHEET.y + 26 }, DX_AFTER),
@@ -122,21 +123,25 @@ const buildChips = (before: string[], after: string[], status: string): ChipSpec
 
 /* -------------------------------------------------------------- scene */
 
-/** His pointer (each key is where a move starts from — see Cursor). One click, then back to his work. */
-const AFTER_POINTER = () => {
+/** His pointer: submit the request, then decide at the review node, then back to his work. */
+const AFTER_POINTER = (story: StoryConfig) => {
   const rest = SCREEN_LAYOUT.cursorRest;
-  const target = { x: cardPoint.status.x + 30, y: cardPoint.status.y + 4 };
+  const submit = { x: cardPoint.status.x + 30, y: cardPoint.status.y + 4 };
+  const decision = reviewDecision(story);
+  const approve = decision ? reviewOptionCenter(decision.options, 0) : submit;
   return {
     keys: [
       { frame: 0, ...rest },
-      // he notices it as it lands, then reaches for it — arriving as the card settles
       { frame: 5, ...rest },
-      { frame: S07.click - 2, ...target },
-      { frame: S07.click + 6, x: target.x + 4, y: target.y + 2 },
-      // done — his hand goes back to his own work, and is still before the stillness
-      { frame: S07.click + 24, x: rest.x + 34, y: rest.y - 12 },
+      { frame: S07.click - 2, ...submit },
+      { frame: S07.click + 8, x: submit.x - 40, y: submit.y + 60 },
+      // he reads the options, then decides
+      { frame: S07.decideClick - 12, x: approve.x - 6, y: approve.y + 4 },
+      { frame: S07.decideClick + 8, x: approve.x - 2, y: approve.y + 6 },
+      { frame: S07.decideClick + 22, ...AFTER_POINTER_HOME },
     ],
-    clicks: [S07.click],
+    clicks: [S07.click, S07.decideClick],
+    rippleColor: colors.accent,
   };
 };
 
@@ -145,25 +150,36 @@ export const AfterScene: React.FC<SceneProps> = ({ durationInFrames }) => {
   const { story } = useStory();
   const cmp = story.after.comparison;
 
-  const draw = progress(frame, S07.line.at, S07.line.dur, ease.inOut);
-  const record = progress(frame, S07.record.at, S07.record.dur, ease.out);
+  const flow: AfterFlowState = {
+    line1: progress(frame, S07.line1.at, S07.line1.dur, ease.inOut),
+    node: progress(frame, S07.node.at, S07.node.dur, ease.out),
+    options: progress(frame, S07.options.at, S07.options.dur, ease.out),
+    decided: progress(frame, S07.decided.at, S07.decided.dur, ease.out),
+    line2: progress(frame, S07.line2.at, S07.line2.dur, ease.inOut),
+    record: progress(frame, S07.record.at, S07.record.dur, ease.out),
+  };
+  // The split folds away before the cut so Scene 08 continues from the calm frame.
+  const outro = progress(frame, S07.outro.at, S07.outro.dur, ease.inOut);
   const flash = envelope(frame, S07.request, S07.request + 28, 5, 20) * 0.4;
 
   const wipeAt = (f: number) => progress(f, S07.wipe.at, S07.wipe.dur, ease.inOut);
-  const lineAt = (f: number) => -4 + (SPLIT_X + 4) * wipeAt(f);
+  const outroAt = (f: number) => progress(f, S07.outro.at, S07.outro.dur, ease.inOut);
+  const lineAt = (f: number) => -4 + (SPLIT_X + 4) * wipeAt(f) * (1 - outroAt(f));
   const wipe = wipeAt(frame);
   const lineX = lineAt(frame);
   // Mid-wipe the line travels up to ≈ 145 px per frame; a 2 px line would strobe. A trailing
   // smear the length of half a frame's travel (a 180° shutter) reads as motion blur, and is
   // zero whenever the line is at rest.
   const smear = Math.max(0, (lineX - lineAt(frame - 1)) * 0.5);
-  const split = frame >= S07.wipe.at;
+  const split = frame >= S07.wipe.at && outro < 1;
 
   const chips = buildChips(cmp.before, cmp.after, story.after.status);
-  // One at a time; the spacing tightens only if a longer list would not land ≥ 20 f before the cut.
-  const room = durationInFrames - 20 - S07.chips.build - S07.chips.first;
-  const spacing = chips.length > 1 ? Math.min(S07.chips.spacing, Math.floor(room / (chips.length - 1))) : 0;
-  const startOf = (i: number) => S07.chips.first + i * spacing;
+  // Pairs: one chip per side at the same moment. The spacing tightens only if a longer list
+  // would not have landed before the split folds away.
+  const pairs = Math.ceil(chips.length / 2);
+  const room = Math.min(durationInFrames, S07.outro.at) - S07.chips.build - 4 - S07.chips.first;
+  const spacing = pairs > 1 ? Math.min(S07.chips.spacing, Math.floor(room / (pairs - 1))) : 0;
+  const startOf = (i: number) => S07.chips.first + Math.floor(i / 2) * spacing;
 
   return (
     <AbsoluteFill style={{ overflow: 'hidden', backgroundColor: '#000' }}>
@@ -175,8 +191,8 @@ export const AfterScene: React.FC<SceneProps> = ({ durationInFrames }) => {
             flash={flash}
             requestStart={S07.request}
             resolveAt={S07.resolve}
-            cursor={AFTER_POINTER()}
-            after={{ draw, record }}
+            cursor={AFTER_POINTER(story)}
+            after={flow}
           />
         </AbsoluteFill>
       </AbsoluteFill>
@@ -207,6 +223,7 @@ export const AfterScene: React.FC<SceneProps> = ({ durationInFrames }) => {
       ) : null}
       {split ? <div style={{ position: 'absolute', left: lineX - 1, top: 0, width: 2, height: 1080, background: colors.accent }} /> : null}
 
+      <AbsoluteFill style={{ opacity: 1 - outro }}>
       {split ? (
         <>
           <SideLabel text={cmp.beforeLabel} x={SPLIT_X - 32} y={64} align="right" tone="dark" start={S07.labels} />
@@ -216,7 +233,7 @@ export const AfterScene: React.FC<SceneProps> = ({ durationInFrames }) => {
 
       {chips.map((spec, i) => {
         // the next chip on the same side arrives two slots later
-        const next = chips.findIndex((c, j) => j > i && c.side === spec.side);
+        const next = chips.findIndex((c, j) => j > i && c.side === spec.side && startOf(j) > startOf(i));
         return (
           <CompareChip
             key={`${spec.side}-${spec.text}`}
@@ -226,6 +243,7 @@ export const AfterScene: React.FC<SceneProps> = ({ durationInFrames }) => {
           />
         );
       })}
+      </AbsoluteFill>
     </AbsoluteFill>
   );
 };

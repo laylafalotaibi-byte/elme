@@ -1,101 +1,112 @@
 import React from 'react';
 import { AbsoluteFill, useCurrentFrame } from 'remotion';
-import { LIGHT } from '../campaign/light';
+import { LIGHT, mixLight } from '../campaign/light';
 import { mapClamp } from '../campaign/motion';
 import { useStory } from '../campaign/StoryContext';
-import { Workspace } from '../components/set/Workspace';
-import { camPoint, camTransform, lerpCam } from './final/geometry';
-import { DeskSheet, IMPACT_PINS, ImpactScreen, type PinKey } from './final/ImpactSet';
-import { PinnedMetric, type Placement } from './final/PinnedMetric';
-import { S08, s08Start } from './final/timing';
+import { MetricPopup } from '../components/ui/MetricPopup';
+import { AFTER_LAYOUT, AFTER_POINTER_HOME, CARD_H, OPENING_CAM, SCREEN_LAYOUT, camPoint, camTransform, screenPoint, type Cam, type Pt } from './person/geometry';
+import { AFTER_RESOLVED, DESK_SHEET, OpeningWorkspace } from './person/OpeningSet';
+import { s08Exit, s08Start } from './final/timing';
 import type { SceneProps } from './types';
 
 /**
- * Scene 08 — Impact · IMPACT · light warm daylight. 170 f, hard cut in, dissolves out.
+ * Scene 08 — Impact · IMPACT · 170 f. Continues from the very frame Scene 07 ends on: the same
+ * over-the-shoulder shot, the same resolved request, his line through the human approval into
+ * one record, the single sheet on a clear desk. The light warms a little; the picture drifts.
  *
- *   0 → 170   A calm AFTER workspace, over his shoulder. On his screen, already resolved:
- *             the request (Scene 07's card, "Submitted digitally"), his thin orange line
- *             running straight down from it into one record — vertical, as in Scenes 06–07 —
- *             and one quiet notification; a clear desk with a single squared sheet. Nothing
- *             moves but one slow, even drift of the picture.
- *   10 + 22n  Six impact pop-ups (story.impact.sequence: 10, 32, 54, 76, 98, 120), one at a
- *             time, each pinned with a hairline leader to a process object — never to him.
- *             At most two on screen: the oldest leaves as the third arrives. The last is
- *             fully built by 148 and holds through the dissolve (160–170).
- *
- *   timeSaved → the request · manualSteps → his line · processingTime → the end of his line ·
- *   paper → the desk sheet · manualEmails → the notification · errorRisk → the record
- *
- * Pop-ups on his line hang to its right on level leaders (as the step words did in Scene 06),
- * staggered in depth so two never stack like a list. The final film shows the approved
- * qualitative wording; the MetricsDraft shows the [X] placeholders + TO VERIFY (placements
- * are measured per mode, so both fit). Pop-ups sit outside the camera (translated with
- * their objects, never scaled).
+ * Six impact pop-ups (story.impact.sequence) arrive one at a time, at most two on screen. They
+ * hang in the open wall space — never on the screen glass, never on him — with a hairline
+ * leader to the process object they describe:
+ *   timeSaved → the request · manualSteps → his line · processingTime → his line, start to end ·
+ *   paper → the desk sheet · manualEmails → the request's quiet status · errorRisk → the record
  */
 
-/** Which object each metric is pinned to; metrics not listed take the next free object. */
-const PIN_FOR_METRIC: Record<string, PinKey> = {
-  timeSaved: 'item',
-  manualSteps: 'line',
-  processingTime: 'lineEnd',
-  paper: 'desk',
-  manualEmails: 'note',
-  errorRisk: 'record',
-};
-const PIN_ORDER: PinKey[] = ['item', 'line', 'lineEnd', 'desk', 'note', 'record'];
+type Slot = { x: number; y: number; width: number; align: 'left' | 'right' };
 
-/**
- * How a pop-up sits against each object. Objects on his line take a level leader and hang
- * to its right (as the step words did in Scene 06); the desk sheet and the notification
- * carry theirs above. Chosen so that any two pop-ups on screen together never overlap, in
- * the final film and in the MetricsDraft.
- */
-const PLACEMENT: Record<PinKey, Placement> = {
-  item: { side: 'right', dx: 0, gap: 46 },
-  line: { side: 'right', dx: 0, gap: 56 },
-  // a longer level leader: out into the open screen, so it never stacks under the line's pop-up like a list
-  lineEnd: { side: 'right', dx: 0, gap: 330 },
-  desk: { side: 'above', dx: 0, gap: 150 },
-  note: { side: 'above', dx: 0, gap: 40 },
-  record: { side: 'right', dx: 0, gap: 56 },
-};
+/** Room-space slots (frame px): two on the wall left of the monitor, one on the desk beside the sheet. */
+const SLOTS = {
+  wallTop: { x: 620 - 500, y: 118, width: 500, align: 'right' },
+  wallLow: { x: 620 - 500, y: 300, width: 500, align: 'right' },
+  deskSide: { x: 1500 - 300, y: 924, width: 300, align: 'right' },
+} satisfies Record<string, Slot>;
 
-const assignPins = (ids: string[]) => {
-  const used = new Set<PinKey>();
-  const wanted = ids.map((id) => PIN_FOR_METRIC[id]);
-  wanted.forEach((k) => k && used.add(k));
-  return ids.map((_id, i) => {
-    const k = wanted[i];
-    if (k && wanted.indexOf(k) === i) return k;
-    const free = PIN_ORDER.find((p) => !used.has(p));
-    if (!free) return null;
-    used.add(free);
-    return free;
-  });
+type PinKey = 'request' | 'line' | 'flow' | 'desk' | 'status' | 'record';
+
+/** Process objects on his screen (canvas → frame through the monitor's perspective) and on his desk. */
+const PINS: Record<PinKey, Pt> = (() => {
+  const R = SCREEN_LAYOUT.request;
+  const { line1, line2, record } = AFTER_LAYOUT;
+  return {
+    request: screenPoint({ x: R.x + 2, y: R.y + 46 }),
+    line: screenPoint({ x: line1.x, y: (line1.y1 + line1.y2) / 2 }),
+    flow: screenPoint({ x: line2.x, y: (line2.y1 + line2.y2) / 2 }),
+    desk: { x: DESK_SHEET.x + 30, y: DESK_SHEET.y + 22 },
+    status: screenPoint({ x: R.x + 2, y: R.y + CARD_H - 30 }),
+    record: screenPoint({ x: record.x, y: record.y + record.h * 0.4 }),
+  };
+})();
+
+/** Where each metric sits and what it points at; metrics not listed take the next free pair. */
+const LAYOUT: Record<string, { pin: PinKey; slot: keyof typeof SLOTS }> = {
+  timeSaved: { pin: 'request', slot: 'wallTop' },
+  manualSteps: { pin: 'line', slot: 'wallLow' },
+  processingTime: { pin: 'flow', slot: 'wallTop' },
+  paper: { pin: 'desk', slot: 'deskSide' },
+  manualEmails: { pin: 'status', slot: 'wallLow' },
+  errorRisk: { pin: 'record', slot: 'wallTop' },
 };
+const FALLBACK: Array<{ pin: PinKey; slot: keyof typeof SLOTS }> = [
+  { pin: 'request', slot: 'wallTop' },
+  { pin: 'line', slot: 'wallLow' },
+];
+
+/** The picture: from Scene 07's last frame, one slow, even drift towards his screen. */
+const CAM_FROM: Cam = OPENING_CAM;
+const CAM_TO: Cam = { scale: 1.045, x: -18, y: 6 };
 
 export const ImpactScene: React.FC<SceneProps> = ({ durationInFrames }) => {
   const frame = useCurrentFrame();
   const { story } = useStory();
-
-  const cam = lerpCam(S08.cam.from, S08.cam.to, mapClamp(frame, [0, durationInFrames - 1], [0, 1]));
-  const ids = story.impact.sequence.slice(0, PIN_ORDER.length);
-  const pins = assignPins(ids);
+  const t = mapClamp(frame, [0, durationInFrames - 1], [0, 1]);
+  const cam: Cam = {
+    scale: CAM_FROM.scale + (CAM_TO.scale - CAM_FROM.scale) * t,
+    x: CAM_FROM.x + (CAM_TO.x - CAM_FROM.x) * t,
+    y: CAM_FROM.y + (CAM_TO.y - CAM_FROM.y) * t,
+  };
+  const light = mixLight(LIGHT.afterDay, LIGHT.warmDay, t);
+  const ids = story.impact.sequence;
 
   return (
     <AbsoluteFill style={{ overflow: 'hidden' }}>
-      {/* picture: one slow, even drift */}
-      <AbsoluteFill style={{ transform: camTransform(cam), transformOrigin: '50% 50%' }}>
-        <Workspace light={LIGHT.warmDay} screen={<ImpactScreen />} desk={<DeskSheet />} />
+      <AbsoluteFill style={camTransform(cam)}>
+        <OpeningWorkspace
+          light={light}
+          requestStart={-200}
+          resolveAt={-180}
+          after={AFTER_RESOLVED}
+          cursor={{ keys: [{ frame: 0, ...AFTER_POINTER_HOME }] }}
+        />
       </AbsoluteFill>
 
-      {/* impact, pinned to the process */}
       {ids.map((id, i) => {
-        const pin = pins[i];
-        if (!pin) return null;
-        const start = s08Start(i);
-        const exitAt = i + 2 < ids.length ? s08Start(i + 2) - S08.exitLead : undefined;
-        return <PinnedMetric key={`${id}-${i}`} metricId={id} anchor={camPoint(cam, IMPACT_PINS[pin])} placement={PLACEMENT[pin]} start={start} exitAt={exitAt} />;
+        const place = LAYOUT[id] ?? FALLBACK[i % FALLBACK.length];
+        const slot = SLOTS[place.slot];
+        const anchor = camPoint(cam, PINS[place.pin]);
+        const originX = slot.align === 'right' ? slot.x + slot.width : slot.x;
+        return (
+          <MetricPopup
+            key={`${id}-${i}`}
+            metricId={id}
+            x={slot.x}
+            y={slot.y}
+            width={slot.width}
+            align={slot.align}
+            valueSize={slot.width <= 300 ? 44 : 56}
+            start={s08Start(i)}
+            exitAt={s08Exit(i, ids.length)}
+            leader={{ x: anchor.x - originX, y: anchor.y - slot.y }}
+          />
+        );
       })}
     </AbsoluteFill>
   );

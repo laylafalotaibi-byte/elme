@@ -25,26 +25,31 @@ export const S01 = {
 
 /** Scene 07 — After Automation (match cut of Scene 01's opening). */
 export const S07 = {
-  /**
-   * The same request lands in the same place (storyboard 0–18). It is readable from ≈ 8
-   * and has settled by ≈ 18, so the viewer recognises Scene 01's request before it changes.
-   */
+  /** The same request lands in the same place; readable from ≈ 8, settled by ≈ 18. */
   request: 2,
-  /** One click — on the request's action, once the card has settled (storyboard 18). */
+  /** One click on the request's action (submit). */
   click: 18,
-  /** A single calm status resolves (storyboard 18–40): chip clears 19–25, status 23–37. */
+  /** "Submitted digitally" resolves on the card. */
   resolve: 19,
-  /** His line runs from the request down into one record (the flow takes it from here). */
-  line: { at: 25, dur: 12 },
-  record: { at: 34, dur: 8 },
-  /** 42–56: stillness — nothing happens (his hand is back on his own work by 42). */
-  /** One orange line wipes across the same shot → split screen (storyboard 56–74). */
-  wipe: { at: 56, dur: 18 },
-  /** Small Before / After labels, as the line settles. */
-  labels: 70,
   /**
-   * Comparison chips, alternating sides, one at a time (storyboard ≈ 12 f apart from 74;
-   * 11 f here so the last one has landed by ≈ 187 and holds before the cut).
+   * His line runs down to the review node: the options appear, a person decides (a click on
+   * the chosen option), and only then does the line continue and the record get generated.
+   * Calm, elapsed-time-neutral pacing — no clock, no "seconds later".
    */
-  chips: { first: 78, spacing: 11, build: 12 },
+  line1: { at: 24, dur: 10 },
+  node: { at: 32, dur: 6 },
+  options: { at: 34, dur: 12 },
+  decideClick: 58,
+  decided: { at: 58, dur: 10 },
+  line2: { at: 64, dur: 10 },
+  record: { at: 72, dur: 10 },
+  /** 82–92: stillness — nothing happens. */
+  /** One orange line wipes across the same shot → split screen. */
+  wipe: { at: 92, dur: 18 },
+  /** Small Before / After labels, as the line settles. */
+  labels: 104,
+  /** Chips arrive in pairs (one per side, never aligned or linked), 17 f apart. */
+  chips: { first: 108, spacing: 17, build: 12 },
+  /** The split folds away: chips fade and the line slides off left, so the calm frame fills the screen into Scene 08. */
+  outro: { at: 192, dur: 16 },
 } as const;
