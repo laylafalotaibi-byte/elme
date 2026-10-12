@@ -40,10 +40,10 @@ Durations live in `src/stories/story01/timeline.ts` (validated in code: 60–75 
 | 06 | Building the Solution | BETTER WAY | warm daylight | 0:38.0 | 7.0 s (210 f) | cut |
 | 07 | After Automation | BETTER WAY | Scene 01's light, warmer | 0:45.0 | 7.0 s (210 f) | cut (match) |
 | 08 | Impact | IMPACT | warm daylight | 0:52.0 | 5.7 s (170 f) | cut |
-| 09 | The Human Outcome | PERSON | warm daylight | 0:57.3 | 7.0 s (210 f) | 10 f dissolve |
-| 10 | Final Message + End Card | IMPACT (sign-off) | dark → warm → ink | 1:04.0 | 11.0 s (330 f) | 10 f dissolve |
+| 09 | The Human Outcome | PERSON | warm daylight | 0:57.3 | 7.0 s (210 f) | 10 f dip (warm paper) |
+| 10 | Final Message + End Card | IMPACT (sign-off) | dark → warm → ink | 1:04.0 | 11.0 s (330 f) | 10 f dip (ink) |
 
-Σ 2,270 f − 20 f of dissolve overlap = **2,250 f = 75.0 s**.
+Σ 2,270 f − 20 f of dip overlap = **2,250 f = 75.0 s**.
 
 **Reading rule.** From the moment a line starts to reveal, it stays on screen for at least
 (words ÷ 3.5) s + 0.4 s; the key moments (the Question, "no previous automation experience",
@@ -66,59 +66,58 @@ Cutting between him and what he sees (shot / reverse-shot) lets a still figure *
 
 ---
 
+> Frame numbers below are the beats as built. The source of truth is each scene's timing
+> module: `src/scenes/person/timing.ts` (01, 07), `src/scenes/before/timing.ts` (02–04),
+> `src/scenes/workflow/timing.ts` (05–06), `src/scenes/final/timing.ts` (08–10).
+
 ## Scene 01 — The Person · 180 f · light `normalDay`
 
-An ordinary morning. Nothing is wrong yet. No titles, no name plate (they are held back for Scene 05).
+An ordinary morning. Nothing is wrong yet. No titles, no name plate (held back for Scene 05).
 
 | f | Picture | Copy |
 |---|---|---|
-| 0–36 | **Workspace**, normal daylight, slow drift. A calm screen; his cursor moves a little — he is working. | — |
-| 36–56 | The request notification slides onto his screen (top right); a soft flash of screen light on his shoulder; the cursor drifts towards it. | *(prop)* New device handover request · Device delivery · Asset registration |
-| 56 | **Cut → Hero shot** (medium), he is reading. | |
-| 60–84 → 118 | Line rises into the space in front of him, holds. | **Another device handover.** |
-| 118–130 | Pause. Nothing new enters. | |
-| 130–152 → 180 | Line 1 dims to 40 %; line 2 rises beneath it and holds. Roman type — no emphasis. | **Another manual process.** |
+| 0–34 | **Workspace**, normal daylight. A calm screen; his cursor moves a little — he is working. | — |
+| 34–52 | The request slides onto his screen (top right); a soft flash of screen light on his shoulder; the cursor drifts to it. | *(prop)* New device handover request · Device delivery · Asset registration |
+| 52 | **Cut → Hero shot** (medium): he is reading. | |
+| 56 → 118 | Line rises into the space in front of him and holds alone (the pause). | **Another device handover.** |
+| 118 → 180 | Line 1 steps back to 40 %; line 2 rises beneath it. Roman type. | **Another manual process.** |
 
 ---
 
 ## Scene 02 — Before Automation · 225 f · light `normalDay → dimmed`
 
 The old process, felt as rhythm. No progress rail: each step's name is a small caption on its
-own artefact. Cuts between screen, desk and workspace. The room darkens as the work piles up.
+own artefact, built in 8 f from the cut. The room darkens as the work piles up.
 
-| f | Shot | Step (caption) | Artefact |
+| f | Shot | Step (caption) | Artefact · annotation |
 |---|---|---|---|
-| 0–22 | Desk | Paper Form | The paper handover form slides onto the desk |
+| 0–22 | Desk | Paper Form | The paper form slides in and is filled in · `Paper-Based` pinned to the form |
 | 22–44 | Desk (close) | Signature | A signature draws itself; the pen |
-| 44–66 | Screen | Email | Email to the Asset Team, sent |
-| 66–88 | Screen | Follow-up | "Any update on this?" lands at the screen edge |
-| 88–118 | Screen | Manual System Update | The System 800 window; one field typed by hand (1 char / 2 f) |
-| 118–136 | Screen | File / Record | The record splits between two places: *Emails* · *Files* |
-| 136–150 | Screen | Another Email | Fwd: Device handover |
-| 150–215 | Workspace → fast inserts | Repeat | Match cut back to the same request arriving. The loop replays faster (≈ 8 f, then ≈ 4 f per step) and the layers **stack instead of clearing** — more paper, more emails, more notifications, more follow-ups. Each new cluster carries an uncounted **Site** tag: the same process restarting elsewhere. |
+| 44–66 | Screen | Email | Email to the Asset Team, sent · `Manual` pinned to the email |
+| 66–88 | Screen | Follow-up | "Any update on this?" lands at the screen edge · `Multiple Follow-ups` pinned to it |
+| 88–113 | Screen | Manual System Update | The System 800 window; the last field typed by hand · `Risk of Human Error` pinned to the field |
+| 113–133 | Screen | File / Record | The record is split into two places: *Emails* · *Files* · `High Manual Effort` pinned to the System 800 window behind |
+| 133–153 | Screen | Another Email | Fwd: Device handover |
+| 153–175 | Workspace | Repeat | Match cut: the same request lands again in the same place, with an uncounted **Site** tag · `Repeated Daily` pinned to the cascade |
+| 175–196 | Fast inserts (7 f) | — | Another site's form signed; an email; a follow-up — layers stack instead of clearing |
+| 196–215 | Workspace | — | The last loop at 2–4 f per step; all six annotations land again on their objects around his screen |
 | 215–225 | Workspace | — | Held: he is surrounded; the room is dim; the screen is the only light. |
 
-**Annotation pop-ups** (verbatim, title case, persisting, never covering the step being shown):
-`Paper-Based` (12) · `Manual` (50) · `Multiple Follow-ups` (80) · `High Manual Effort` (108) ·
-`Risk of Human Error` (126) · `Repeated Daily` (166).
-
-Motion: faster entrances, springy settles, overlaps, small rotations on paper. Never comic,
-never per-frame jitter. He stays composed; the process multiplies.
+Annotations are born inside the shot they describe and leave on its cut — never a screen-fixed
+HUD. Motion stays sober: no per-frame jitter, every move under ≈ 50 px per frame.
 
 ---
 
 ## Scene 03 — The Pain · 240 f · light `dimmed`
 
-Slower. One line at a time, each on its own shot; indicators pinned to real objects, never in a row.
+Slower. One line at a time; indicators pinned to real objects, at most two on screen.
 
 | f | Picture | Copy / indicators |
 |---|---|---|
-| 0–62 | Desk insert: one single paper form, in focus. Simple. | **The task wasn’t difficult.** (in 8) |
-| 62–140 | The same form, now one of a stack of identical forms; emails stacked behind. | **But repeating it every day was costing time.** (in 66) · `TIME ↓ Lost to repetitive work` pinned to the stack (100) · `EFFORT ↑ Manual handling` pinned to the paper pile (114) |
-| 140–156 | **Cut → Hero shot** (close): he looks at it. Silence. | — |
-| 156–240 | Screen insert: the System 800 field being typed; the two record places. | **And every manual step created another opportunity for error.** (in 158) · `RISK ↑ Human error` pinned to the typed field (194) · `RECORDS Fragmented` pinned to the two record places (206) |
-
-At most two indicators on screen at once (earlier ones leave as later ones arrive).
+| 0–48 | Desk insert: one single paper form, in focus. | **The task wasn’t difficult.** (in 2) |
+| 48–140 | The camera pulls back: the same form tops a stack of identical forms; emails stacked on his phone; a handled pile. | **But repeating it every day was costing time.** (in 52) · `TIME ↓ Lost to repetitive work` on the stack (85) · `EFFORT ↑ Manual handling` on the pile (98) |
+| 140–150 | **Cut → Hero shot** (close): he looks at it. Silence. | — |
+| 150–240 | His monitor in the dark room: the System 800 field typed by hand, with a hesitation; the two record places. | **And every manual step created another opportunity for error.** (in 150) · `RISK ↑ Human error` on the field (188) · `RECORDS Fragmented` on both places (198) |
 
 ---
 
@@ -128,34 +127,29 @@ The turning point. The strongest, quietest frame of the film.
 
 | f | Picture | Copy |
 |---|---|---|
-| 0–36 | The frozen clutter quietly re-aligns: rotated chaos straightens into a grid of identical, repeating cycles. The pile becomes a pattern — he sees the process differently. | — |
-| 36–72 | **Hard cut → Hero shot** (close), held still. Only grain moves. He stops. | — |
+| 0–31 | The frozen clutter quietly re-aligns into a grid of identical, repeating cycles as the view tips back — the pile becomes a pattern. | — |
+| 32–72 | **Hard cut → Hero shot** (close), held still. He stops. | — |
 | 72–86 | Fade to near-black. | — |
-| 86–112 | The question rises as one thought (line by line, not word by word), centred, in the human voice (Newsreader Light). | **Why are we still doing this manually?** |
-| 112–195 | Hold. Nothing moves except grain. No camera move on the type. | |
+| 86 → 195 | The question rises line by line, centred, in the human voice (Newsreader Light), lands by ≈ 108 and holds. No camera move on the type. | **Why are we still doing this manually?** |
 
 ---
 
 ## Scene 05 — The Unexpected Part · 300 f · light `black → warm key`
 
-The reveal: who solved it — and that he had to learn first.
-
 | f | Picture | Copy |
 |---|---|---|
-| 0–12 | Black. | — |
-| 12–40 | **Hero shot** (medium) racks from soft to sharp; rim light only. The documentary **lower-third** lands — the first and only time his name and role appear. | lower-third: *[name]* · IT Support |
-| 24–50 → 92 | Line rises in the space in front of him. | **He was a junior IT Support employee.** |
-| 92–108 | Picture and line fade to near-black. Silence. | — |
-| 108–135 → 190 | Alone on a clean frame, one size larger, no underline. As it holds, a warm key light slowly rises on him behind the type. | **He had no previous automation experience.** |
-| 190–196 | Cut → **Screen insert** in warm light: his notes, a blank canvas. | |
-| 196 → 300 | Supporting line settles at the bottom and stays. | He started learning what he needed to solve the problem himself. |
-| 204 | His cursor hovers, reads. | **LEARN.** |
-| 228 | A dashed draft of a path is drawn — then crossed out. | **EXPERIMENT.** (replaces) |
-| 252 | A second draft; the dashed line turns solid. | **BUILD.** (replaces) |
-| 276 → 300 | The line straightens. | **IMPROVE.** (replaces, holds) |
+| 6–32 | **Hero shot** (close) fades up and racks from soft to sharp; rim light only. The lower-third lands (only once a name is approved; the draft shows the placeholder). | lower-third: *[name]* · IT Support |
+| 34 → 96 | After a held silence, line 1 — one step larger than Scene 01's lines. | **He was a junior IT Support employee.** |
+| 96–106 | Picture and line fade to near-black. | — |
+| 108 → 190 | Alone, one size larger again. A warm key light rises on him behind the type from 120. | **He had no previous automation experience.** |
+| 190 | Cut → **Screen insert** in warm light: his notes on a quiet paper surface. | |
+| 191 → | Supporting line, held into Scene 06. | He started learning what he needed to solve the problem himself. |
+| 195 | His cursor reads his notes. | **LEARN.** |
+| 219 | A dashed draft is drawn — then crossed out. **244–262: cut to him** (close, warm key): he has seen it fail. | **EXPERIMENT.** (held across the intercut) |
+| 265 | Back on screen: a second draft; the dashes close. | **BUILD.** |
+| 289 → | He straightens the line. | **IMPROVE.** |
 
-The four words appear one at a time, each replacing the last, set at 76 px — learning, not a
-motivational poster. Drafts look like a learner's sketches: no code, no expert tropes.
+Each word replaces the last and holds ≥ 21 f. The drafts are a learner's sketches: no code.
 
 ---
 
@@ -165,76 +159,77 @@ His line becomes the workflow. Vertical, as the brief writes it.
 
 | f | Picture | Copy |
 |---|---|---|
-| 0–24 | The straightened line from Scene 05 turns orange and swings vertical; the room fills with warm daylight. | — |
-| 24–40 | Three or four hairlines converge from off-frame into the top of the line (no count). | `Sites` (small) |
-| 40–150 | The camera tracks down the line. One step at a time, each word arriving as the line reaches it and leaving as the next arrives. As the line passes, old artefacts fold into it (the paper form flattens into a point at SUBMIT; scattered files merge into one at CENTRALIZE; the email collapses at NOTIFY). The System 800 window never becomes a step. | **SUBMIT** (40) · **TRIGGER** (58) · **REVIEW** (76) with `Approve / Reject` — a click resolves it to *Approve* (≈ 96): a human decision · **GENERATE RECORD** (108) · **CENTRALIZE** (126) · **NOTIFY** (144) → branches to `Asset Team` / `Employee` (148–160) |
-| 150–176 | One pull-back reveals the whole line, all six steps, in a single gesture. | |
-| 162 / 174 → 210 | Impact pop-ups pinned to the process: SITES at the convergence, RECORDS at CENTRALIZE. | `Multiple sites · One Consistent Process` · `Records · Centralized` |
+| 0–40 | Scene 05's notes clear; the straightened line turns orange and swings vertical; the room fills with warm daylight. | — |
+| 14–52 | Hairlines converge from off-frame into the top of the line (no count). | `Sites` (small) |
+| 43 → 138 | The camera follows the line down. Each step arrives as a large word, then settles into a small label on the line that stays. Old artefacts fold into it as it passes: the (unsigned) paper form at SUBMIT, the two record places merging into one at CENTRALIZE, the email at NOTIFY. | **SUBMIT** (43) · **TRIGGER** (58) · **REVIEW** (73) — his hand enters, `Approve / Reject` rises, a click resolves it to *Approve* (90): a human decision · **GENERATE RECORD** (108) · **CENTRALIZE** (123) · **NOTIFY** (138) → `Asset Team` / `Employee` (148) |
+| 138–172 | One pull-back reveals the whole line, every step already read. | |
+| 156 / 166 → 210 | Impact pop-ups pinned to the process. | `Multiple sites · One Consistent Process` · `Records · Centralized` |
 
-No travelling token, no kicker, no sub-labels besides Approve / Reject. No product styling.
+The System 800 window never becomes a step. No travelling token, no stepper rings.
 
 ---
 
 ## Scene 07 — After Automation · 210 f · light `afterDay`
 
-**Match cut of Scene 01**: same framing, same request, same moment. A different experience.
+**Match cut of Scene 01**: same framing, same request, same moment — a different experience.
 
 | f | Picture | Copy |
 |---|---|---|
-| 0–18 | Workspace, exactly Scene 01's framing, a little warmer. The same request arrives in the same place. | — |
-| 18–40 | One click. A single calm status resolves on screen. No tick cascade. | *(prop)* Submitted digitally |
-| 40–56 | Stillness. A clear desk, a quiet screen. Nothing happens — the absence is the point. | — |
-| 56–74 | One orange line wipes across the same shot → split screen: **left** = Scene 02's final cluttered frame (dim), **right** = this calm frame. | `Before` · `After` (small) |
-| 74–194 | Chips pinned to real objects, alternating sides, one at a time (≈ 12 f apart), earlier chips dimming. Two separate groups — no row pairing, no arrows between sides. | Left: Paper · Emails · Manual follow-ups · Manual updates · Fragmented records — Right: Digital submission · Automated flow · Centralized record · Automatic notifications · Clean process |
-| 194–210 | Hold. | |
+| 0–18 | Exactly Scene 01's framing, a little warmer. The same request lands in the same place. | — |
+| 18 | One click: the request is submitted. | *(prop)* Submitted digitally |
+| 24–58 | His line runs down to a small review node; the options rise; **he decides** — a click on *Approve* (58). Approval is never automatic. | `Approve / Reject` → *Approve* |
+| 58–82 | Only then does the line continue and the one record get generated. | — |
+| 82–92 | Stillness. A quiet screen, a clear desk with one sheet. | — |
+| 92–110 | One orange line wipes across the same shot → split screen: **left** = Scene 02's final cluttered frame, **right** = this calm frame. | `Before` · `After` (104) |
+| 108–188 | Chips arrive in pairs (one per side, 17 f apart), pinned to real objects — two separate groups, never aligned or linked. | Left: Paper · Emails · Manual follow-ups · Manual updates · Fragmented records — Right: Digital submission · Automated flow · Centralized record · Automatic notifications · Clean process |
+| 192–208 | The split folds away: chips fade, the line slides off left, the calm frame fills the screen. | |
 
-Left side motion: a restless slow drift and periodic interruptions (≤ 4 px, ≥ 20 f period).
-Right side: still. System 800 appears only on the BEFORE side.
+System 800 appears only on the BEFORE side.
 
 ---
 
-## Scene 08 — Impact · 170 f · light `warm daylight`
+## Scene 08 — Impact · 170 f · light `afterDay → warmDay`
 
-A calm AFTER workspace; pop-ups pinned to process objects (never to his body), one at a time,
-at most two on screen.
+Continues from the exact frame Scene 07 ends on (same shot, card, line, record, desk sheet);
+the light warms a little and the picture drifts towards his screen. Pop-ups hang in room space —
+on the wall beside the monitor and on the desk — never on the screen glass or on him, with a
+hairline to the object they describe. One every 22 f, at most two on screen, all gone by 158.
 
 | f | Metric (final film, until verified) | Pinned to |
 |---|---|---|
-| 10 | `┌ Less Manual Work` *(TIME SAVED [X]% / [X] hrs)* | the single item on his screen |
-| 36 | `┌ Reduced Repetitive Work` *(MANUAL STEPS [X] → [X])* | the flow line |
-| 62 | `┌ Faster Processing` *(PROCESSING TIME [Before] → [After])* | the end of the flow line |
-| 88 | `┌ PAPER ↓ Reduced` | the clear desk |
-| 114 | `┌ MANUAL EMAILS ↓ Reduced` | the quiet notification |
-| 140 → 170 | `┌ Better Accuracy` *(ERROR RISK)* | the record |
+| 10 | `┌ Less Manual Work` *(TIME SAVED [X]% / [X] hrs)* | the request |
+| 32 | `┌ Reduced Repetitive Work` *(MANUAL STEPS [X] → [X])* | his line |
+| 54 | `┌ Faster Processing` *(PROCESSING TIME [Before] → [After])* | his line, through the approval |
+| 76 | `┌ PAPER ↓ Reduced` | the single desk sheet |
+| 98 | `┌ MANUAL EMAILS ↓ Reduced` | the request's quiet status |
+| 120 | `┌ Better Accuracy` *(ERROR RISK)* | the record |
 
 Brackets show what the **MetricsDraft** composition displays instead: label + `[X]` slot +
-*TO VERIFY*. A verified value (with source) replaces both.
+*TO VERIFY*. A verified value (with a source) replaces both.
 
 ---
 
-## Scene 09 — The Human Outcome · 210 f · light `warm daylight`
+## Scene 09 — The Human Outcome · 210 f · light `warm daylight` · enters on a 10 f dip to warm paper
 
-Back to him. Hero shot, slow push from medium to close.
+Back to him. Hero shot, slow push from medium towards close; a warm key rises as the last line lands.
 
 | f | Copy |
 |---|---|
-| 14–40 → 78 | **He wasn’t asked to build it.** |
-| 78–96 | *(pause — nothing new)* |
-| 96–114 → 140 | **He saw a problem.** |
-| 140–165 → 210 | **And found *a better way.*** — *a better way* in the human voice, orange; holds ≥ 1.5 s. |
+| 14 → | **He wasn’t asked to build it.** (holds alone — the pause) |
+| 90 → | **He saw a problem.** |
+| 132 → 200 | **And found *a better way.*** — *a better way* in the human voice, orange. |
 
 ---
 
-## Scene 10 — Final Message & End Card · 330 f
+## Scene 10 — Final Message & End Card · 330 f · enters on a 10 f dip to ink
 
 | f | Picture | Copy |
 |---|---|---|
-| 10–55 | Image callback: the old pile (dim) labelled **MANUAL**; one orange hairline sweeps across — behind it the pile collapses into the single orange line in warm light and the word becomes **AUTOMATED**. | MANUAL → AUTOMATED |
-| 58–80 → 103 | Centred. | **No previous automation experience.** |
-| 103–117 | *(pause)* | |
-| 117–150 → 190 | Centred. Only *the drive to improve* in the human voice. | **Just curiosity, ownership, and *the drive to improve.*** |
-| 190–225 | **End card** builds (rule → line word by word → the orange full stop lands last → tagline → meta). | **WE FOUND A BETTER WAY.** · *Small improvements can create meaningful impact.* · Story 01 · Corporate Technology |
-| 225–330 | Still hold (3.5 s). | |
+| 12–24 | The old pile (dim), labelled **MANUAL** at display size. | MANUAL |
+| 24–48 | One orange hairline sweeps across; behind it the pile folds into his single line in warm light — one form stays, squared into a single sheet — and the word becomes **AUTOMATED**. | AUTOMATED |
+| 74 → | Centred. | **No previous automation experience.** |
+| 104 → 190 | After a pause; only *the drive to improve* in the human voice. | **Just curiosity, ownership, and *the drive to improve.*** |
+| 190 → 330 | Cut to ink. **End card** builds in ≈ 33 f (rule → line word by word → the orange full stop lands last → tagline → meta), then holds still. | **WE FOUND A BETTER WAY.** · *Small improvements can create meaningful impact.* · Story 01 · Corporate Technology |
 
 ---
 

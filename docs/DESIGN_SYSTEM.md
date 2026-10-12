@@ -137,10 +137,11 @@ type is never inside a scaling camera (no shimmer). No typewriter effects on sto
 | `dur.line` | 22 f · word stagger 4 f |
 
 **Cutting:** hard cuts by default, on action. **Match cuts** for 01 ↔ 07 and for the loop
-restarts in 02. Dissolves (≤ 10 f) only where time passes (into 09 and 10). The **orange-line
+restarts in 02. Where time passes (into 09 and 10), a 10 f **dip** — out to a colour and back
+in — instead of a dissolve, so two shots of him never double-expose. The **orange-line
 wipe** is reserved for two moments: the Scene 07 split and Scene 10's MANUAL → AUTOMATED.
 
-**Timing rules:** text appears only after any incoming dissolve and is fully revealed ≥ 10 f
+**Timing rules:** text appears only after any incoming dip and is fully revealed ≥ 10 f
 before a cut; from the start of its reveal a line stays on screen ≥ (words ÷ 3.5) s + 0.4 s,
 key moments longer; one new element at a time.
 
