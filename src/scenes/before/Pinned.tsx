@@ -1,9 +1,10 @@
 import React from 'react';
 import { useCurrentFrame } from 'remotion';
-import { colors, toneColors, type Tone } from '../../campaign/theme';
+import { toneColors, type Tone } from '../../campaign/theme';
 import { ease, progress } from '../../campaign/motion';
 import type { Indicator } from '../../campaign/types';
 import { IndicatorPopup } from '../../components/ui/MetricPopup';
+import { PIN } from './timing';
 
 /**
  * A pain indicator pinned to real objects: the shared IndicatorPopup (┌ LABEL ↓ value)
@@ -27,17 +28,18 @@ export const PinnedIndicator: React.FC<{
   const frame = useCurrentFrame();
   if (!indicator || frame < start) return null;
   const c = toneColors(tone);
-  const lead = progress(frame, start + 10, leadDuration, ease.inOut);
-  const exit = exitAt === undefined ? 0 : progress(frame, exitAt, 14, ease.in);
+  const lead = progress(frame, start + PIN.leadDelay, leadDuration, ease.inOut);
+  const exit = exitAt === undefined ? 0 : progress(frame, exitAt, PIN.exit, ease.in);
   return (
     <>
       <svg style={{ position: 'absolute', left: 0, top: 0, overflow: 'visible', pointerEvents: 'none', opacity: 1 - exit }} width={1} height={1}>
         {targets.map((t, i) => {
-          const p = progress(frame, start + 10 + i * 3, leadDuration, ease.inOut);
+          const p = progress(frame, start + PIN.leadDelay + i * PIN.stagger, leadDuration, ease.inOut);
           return (
             <g key={i}>
               <line x1={x} y1={y} x2={x + (t.x - x) * p} y2={y + (t.y - y) * p} stroke={c.faint} strokeWidth={1.2} />
-              {p > 0.98 ? <circle cx={t.x} cy={t.y} r={3.5} fill={colors.accent} /> : null}
+              {/* neutral: orange is reserved for the better way */}
+              {p > 0.98 ? <circle cx={t.x} cy={t.y} r={3.5} fill={c.muted} stroke={c.surface} strokeWidth={1} /> : null}
             </g>
           );
         })}

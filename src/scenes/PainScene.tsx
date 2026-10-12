@@ -1,55 +1,59 @@
 import React from 'react';
-import { AbsoluteFill, useCurrentFrame } from 'remotion';
+import { AbsoluteFill, Easing, useCurrentFrame } from 'remotion';
 import { useStory } from '../campaign/StoryContext';
 import { LIGHT } from '../campaign/light';
 import { colors, layout, type } from '../campaign/theme';
-import { ease, mapClamp } from '../campaign/motion';
+import { ease, mapClamp, span } from '../campaign/motion';
 import { DeskInsert } from '../components/set/Inserts';
 import { HeroShot } from '../components/set/HeroShot';
 import { SystemWindow } from '../components/ui/artifacts/SystemWindow';
 import { MaskedReveal } from '../components/typography/Reveal';
-import { ClutterScreen, typedFieldRect } from './before/ClutterScreen';
+import { CLUTTER_HEIGHT, ClutterScreen, clutterItem, typedFieldRect } from './before/ClutterScreen';
 import { PaperPile, PaperStack, PhoneEmails, STACK, pilePin, stackPin } from './before/PainSet';
 import { PinnedIndicator } from './before/Pinned';
 import { DeskLight, RecordChip } from './before/props';
 import { DeskPlane, ScreenShot } from './before/ScreenShot';
 import { canvasToFrame, pushCam, splitTwo, type Cam } from './before/shared';
+import { PAIN_INDICATORS, S03_DESK, S03_LINE, S03_SCREEN, S03_SHOT, type PainRole } from './before/timing';
 import type { SceneProps } from './types';
 
 /**
  * Scene 03 — The Pain (PROBLEM, felt) · 240 f · light dimmed.
  *
  * Slower. One line at a time, each on its own shot; indicators pinned to real objects
- * (never in a row), at most two on screen.
+ * (never in a row), never more than two on screen. Beats: before/timing.ts · S03.
  *
- *   0–62    Desk: one single paper form, in focus.            "The task wasn't difficult." (in 8)
- *   54–90   The camera pulls back: the same form is one of a stack of identical forms,
- *           emails stacked behind; line 1 steps back to 40 %.  "But repeating it every day…" (in 58)
- *   90–140  Settled. TIME ↓ pinned to the stack (92) · EFFORT ↑ pinned to the paper pile (104).
- *           (8–10 f earlier than the storyboard's 100 / 114: an indicator takes 26 f to build,
- *           and EFFORT must land ≥ 10 f before the cut at 140. Both start after the camera has
- *           settled, so their pins — laid out at camera 1 — sit exactly on the objects.)
- *   140–156 Cut → Hero shot (close): he looks at it. Silence.
- *   156–240 Screen: the System 800 field being typed; the two record places.
- *           "And every manual step created another opportunity for error." (in 158)
- *           RISK ↑ pinned to the typed field (194) · RECORDS pinned to both record places (206)
+ *   0–48    Desk: one single paper form, in focus.            "The task wasn't difficult." (2)
+ *   48–84   The camera pulls back: the same form is one of a stack of identical forms, other
+ *           hands' forms piled beside it, emails behind; line 1 steps back to 40 %.
+ *                                                              "But repeating it every day…" (52/56)
+ *   86–140  Settled. TIME ↓ pinned to the stack (86, on 54 f) · EFFORT ↑ to the pile (98, on 42 f).
+ *   140–150 Cut → Hero shot (close): he looks at it. Silence.
+ *   150–240 The monitor in the dark room (the same screen Scene 02 left, soft) — the screen is
+ *           the only light; the last field is typed by hand (156…196, with a hesitation).  "And every manual step created another
+ *           opportunity for error." (151/155, on 89 f) · RISK ↑ on the typed field (188) ·
+ *           RECORDS on both record places (198).
  */
 
 const TEXT_X = layout.marginX;
 const LINE = { ...type.displayM, color: colors.textOnDark, whiteSpace: 'nowrap' as const };
+const LINEAR = Easing.linear;
+
+/** The indicator pinned to an object, by role. */
+const useIndicator = (role: PainRole) => useStory().story.pain.indicators[PAIN_INDICATORS[role]];
 
 /* -------------------------------------------------------------- desk shot */
 
 /** Camera over the (tilted) desk: world point `focus` lands on frame point `at`. */
 const deskCamera = (frame: number) => {
-  const t = mapClamp(frame, [54, 90], [0, 1], ease.inOut);
+  const t = span(frame, S03_DESK.pullBack, ease.inOut);
   const scale = 1.62 + (1 - 1.62) * t;
   const focus = { x: STACK.x, y: STACK.y };
   // Close framing sits far enough right that the loose pile is fully out of frame: the first
   // shot is one form, simple — nothing else bright in the picture.
   const at = { x: 1420 + (STACK.x - 1420) * t, y: 430 + (STACK.y - 430) * t };
   // a breath of movement while it holds close
-  const drift = mapClamp(frame, [0, 54], [0, 1]) * 0.015 * (1 - t);
+  const drift = span(frame, S03_DESK.hold, LINEAR) * 0.015 * (1 - t);
   return { scale: scale * (1 + drift), focus, at };
 };
 
@@ -57,11 +61,12 @@ const DeskShot: React.FC<{ frame: number }> = ({ frame }) => {
   const { story } = useStory();
   const light = LIGHT.dimmed;
   const cam = deskCamera(frame);
-  const spread = mapClamp(frame, [58, 90], [0, 1], ease.inOut);
-  const dof = 6 * (1 - mapClamp(frame, [54, 90], [0, 1], ease.inOut));
+  const spread = span(frame, S03_DESK.spread, ease.inOut);
+  const dof = 6 * (1 - span(frame, S03_DESK.pullBack, ease.inOut));
   const [l2a, l2b] = splitTwo(story.pain.lines[1]);
-  const step = mapClamp(frame, [54, 68], [1, 0.4], ease.inOut);
-  const [time, effort] = story.pain.indicators;
+  const step = mapClamp(frame, S03_DESK.line1Back as [number, number], [1, 0.4], ease.inOut);
+  const time = useIndicator('stack');
+  const effort = useIndicator('pile');
   return (
     <AbsoluteFill>
       <DeskInsert light={light}>
@@ -80,22 +85,23 @@ const DeskShot: React.FC<{ frame: number }> = ({ frame }) => {
             <PaperStack spread={spread} />
           </AbsoluteFill>
           <DeskLight light={light} pool={{ x: 58, y: 36 }} spread={58} />
-          <PinnedIndicator indicator={time} x={stackPin.x + 78} y={stackPin.y - 70} start={92} leadDuration={12} targets={[{ x: stackPin.x - 6, y: stackPin.y + 8 }]} />
-          <PinnedIndicator indicator={effort} x={pilePin.x - 220} y={pilePin.y + 84} start={104} leadDuration={12} targets={[{ x: pilePin.x, y: pilePin.y }]} />
+          {/* both start after the camera has settled, so their pins (laid out at camera 1) sit on the objects */}
+          <PinnedIndicator indicator={time} x={stackPin.x + 78} y={stackPin.y - 70} start={S03_DESK.time} leadDuration={S03_DESK.lead} targets={[{ x: stackPin.x - 6, y: stackPin.y + 8 }]} />
+          <PinnedIndicator indicator={effort} x={pilePin.x - 220} y={pilePin.y + 84} start={S03_DESK.effort} leadDuration={S03_DESK.lead} targets={[{ x: pilePin.x, y: pilePin.y }]} />
         </DeskPlane>
       </DeskInsert>
       {/* copy: flat, never inside the camera */}
       <div style={{ position: 'absolute', left: TEXT_X, top: 664, opacity: step }}>
-        <MaskedReveal start={6} duration={20} block>
+        <MaskedReveal start={S03_DESK.line1} duration={S03_LINE.duration} block>
           <span style={LINE}>{story.pain.lines[0]}</span>
         </MaskedReveal>
       </div>
       <div style={{ position: 'absolute', left: TEXT_X, top: 772 }}>
-        <MaskedReveal start={58} duration={20} block>
+        <MaskedReveal start={S03_DESK.line2[0]} duration={S03_LINE.duration} block>
           <span style={LINE}>{l2a}</span>
         </MaskedReveal>
         {l2b ? (
-          <MaskedReveal start={62} duration={20} block>
+          <MaskedReveal start={S03_DESK.line2[1]} duration={S03_LINE.duration} block>
             <span style={LINE}>{l2b}</span>
           </MaskedReveal>
         ) : null}
@@ -106,63 +112,84 @@ const DeskShot: React.FC<{ frame: number }> = ({ frame }) => {
 
 /* -------------------------------------------------------------- screen shot */
 
-const SYS = { x: 140, y: 170, w: 560 } as const;
-const REC_A = { x: 720, y: 158, w: 280 } as const;
-const REC_B = { x: 790, y: 340, w: 280 } as const;
-const SCREEN_CAM: Cam = { zoom: 1.04, focus: { x: 668, y: 380 } };
+/**
+ * The same screen as the end of Scene 02 (his settled clutter, soft), with the newest System
+ * 800 window and the record's two places sharp in front — exactly where they sit in the pile.
+ */
+const SYS = clutterItem('sys3');
+const REC = clutterItem('rec1');
+const RECORD_PLACES = REC.kind === 'records' ? { a: REC.a, b: REC.b, w: REC.w } : { a: { x: 200, y: 612 }, b: { x: 800, y: 590 }, w: 320 };
+const RECORD_H = CLUTTER_HEIGHT.records;
+/**
+ * Pulled back: the whole monitor, its bezel and the dark room around it; the screen sits
+ * high so the line reads in light type on the dark band below it.
+ */
+const SCREEN_CAM: Cam = { zoom: 0.62, focus: { x: 640, y: 538 } };
+/** The room: edges ≥ 60 % dark, a soft spill on the wall, the screen a touch below full. */
+const ROOM = { vignette: 0.82, spill: 0.14, screenLevel: 0.78 } as const;
+/** Where line 3 sits: on the dark band under the monitor. */
+const LINE3_TOP = 836;
 
 const ScreenShotPain: React.FC<{ frame: number; end: number }> = ({ frame, end }) => {
   const { story } = useStory();
   const a = story.before.artifacts;
-  const cam = pushCam(frame, 156, end + 6, SCREEN_CAM, 0.025);
+  const cam = pushCam(frame, S03_SHOT.screen[0], end, SCREEN_CAM, S03_SCREEN.push);
   const [l3a, l3b] = splitTwo(story.pain.lines[2]);
-  const [, , risk, records] = story.pain.indicators;
+  const risk = useIndicator('typedField');
+  const records = useIndicator('records');
 
-  // Typing the last field by hand — slow, with a hesitation.
+  // Typing the last field by hand — half, a hesitation, the rest.
   const total = a.system.fields.reduce((n, f) => n + f.value.length, 0);
   const lastLen = a.system.fields[a.system.fields.length - 1]?.value.length ?? 0;
-  const typedLast = Math.floor(mapClamp(frame, [162, 176], [0, Math.ceil(lastLen / 2)])) + Math.floor(mapClamp(frame, [186, 204], [0, lastLen - Math.ceil(lastLen / 2)]));
+  const half = Math.ceil(lastLen / 2);
+  const typedLast = Math.floor(span(frame, S03_SCREEN.typing.first, LINEAR) * half) + Math.floor(span(frame, S03_SCREEN.typing.second, LINEAR) * (lastLen - half));
   const typing = total ? (total - lastLen + typedLast) / total : 1;
 
   const field = typedFieldRect(SYS);
-  const fieldPin = canvasToFrame({ x: field.x + field.w * 0.42, y: field.y + field.h }, cam);
-  // RECORDS sits above-right of both places; one leader drops down-left to Emails, the other
-  // straight down to Files, clear of the Emails chip and of the copy.
-  const recCorner = { x: REC_A.x + REC_A.w + 44, y: REC_A.y - 40 };
-  const aPin = canvasToFrame({ x: REC_A.x + REC_A.w - 2, y: REC_A.y + 64 }, cam);
-  const bPin = canvasToFrame({ x: recCorner.x, y: REC_B.y + 27 }, cam);
-  const riskAt = canvasToFrame({ x: field.x - 20, y: field.y + field.h + 52 }, cam);
-  const recAt = canvasToFrame(recCorner, cam);
+  const { a: placeA, b: placeB, w: recW } = RECORD_PLACES;
+  // RISK sits to the right of the window; its leader drops down-left onto the typed field.
+  const fieldPin = canvasToFrame({ x: field.x + field.w - 30, y: field.y + field.h }, cam);
+  const riskAt = canvasToFrame({ x: SYS.x + SYS.w + 30, y: field.y - 82 }, cam);
+  // RECORDS sits just under the gap between the two places; one leader to each.
+  const recAt = canvasToFrame({ x: placeB.x - 20, y: placeB.y + RECORD_H + 34 }, cam);
+  const aPin = canvasToFrame({ x: placeA.x + recW - 30, y: placeA.y + RECORD_H }, cam);
+  const bPin = canvasToFrame({ x: placeB.x + 24, y: placeB.y + RECORD_H }, cam);
 
   return (
     <ScreenShot
       light={LIGHT.dimmed}
       cam={cam}
-      tilt={{ x: 2, y: -2 }}
-      backBlur={5}
-      back={<ClutterScreen frame={0} settled only={['email1', 'email2', 'email3', 'follow1', 'follow3']} />}
+      tilt={{ x: 3, y: -7 }}
+      overscan={false}
+      room={ROOM}
+      backBlur={6}
+      back={<ClutterScreen frame={0} settled except={[SYS.id, REC.id]} />}
       front={
         <>
           <SystemWindow name={a.system.name} title={a.system.title} fields={a.system.fields} tag={a.system.tag} typing={typing} tone="light" width={SYS.w} style={{ position: 'absolute', left: SYS.x, top: SYS.y }} />
-          <RecordChip place={a.records.buckets[0] ?? ''} fileName={a.records.fileName} width={REC_A.w} style={{ position: 'absolute', left: REC_A.x, top: REC_A.y }} />
-          <RecordChip place={a.records.buckets[1] ?? ''} fileName={a.records.fileName} width={REC_B.w} style={{ position: 'absolute', left: REC_B.x, top: REC_B.y }} />
+          <RecordChip place={a.records.buckets[1] ?? a.records.buckets[0] ?? ''} fileName={a.records.fileName} width={recW} style={{ position: 'absolute', left: placeB.x, top: placeB.y }} />
+          <RecordChip place={a.records.buckets[0] ?? ''} fileName={a.records.fileName} width={recW} style={{ position: 'absolute', left: placeA.x, top: placeA.y }} />
         </>
       }
       overlay={
-        <div style={{ position: 'absolute', left: TEXT_X, top: 786 }}>
-          <MaskedReveal start={157} duration={20} block>
-            <span style={{ ...LINE, color: colors.textOnLight }}>{l3a}</span>
-          </MaskedReveal>
-          {l3b ? (
-            <MaskedReveal start={161} duration={20} block>
-              <span style={{ ...LINE, color: colors.textOnLight }}>{l3b}</span>
+        <>
+          {/* the dark band under the monitor carries the line */}
+          <AbsoluteFill style={{ pointerEvents: 'none', background: 'linear-gradient(180deg, rgba(4,5,7,0) 70%, rgba(4,5,7,0.55) 100%)' }} />
+          <div style={{ position: 'absolute', left: TEXT_X, top: LINE3_TOP }}>
+            <MaskedReveal start={S03_SCREEN.line3[0]} duration={S03_LINE.duration} block>
+              <span style={LINE}>{l3a}</span>
             </MaskedReveal>
-          ) : null}
-        </div>
+            {l3b ? (
+              <MaskedReveal start={S03_SCREEN.line3[1]} duration={S03_LINE.duration} block>
+                <span style={LINE}>{l3b}</span>
+              </MaskedReveal>
+            ) : null}
+          </div>
+        </>
       }
     >
-      <PinnedIndicator indicator={risk} x={riskAt.x} y={riskAt.y} start={194} tone="light" targets={[fieldPin]} />
-      <PinnedIndicator indicator={records} x={recAt.x} y={recAt.y} start={204} tone="light" targets={[aPin, bPin]} leadDuration={12} />
+      <PinnedIndicator indicator={risk} x={riskAt.x} y={riskAt.y} start={S03_SCREEN.risk} tone="light" targets={[fieldPin]} />
+      <PinnedIndicator indicator={records} x={recAt.x} y={recAt.y} start={S03_SCREEN.records} tone="light" targets={[bPin, aPin]} leadDuration={S03_SCREEN.recordsLead} />
     </ScreenShot>
   );
 };
@@ -172,11 +199,11 @@ const ScreenShotPain: React.FC<{ frame: number; end: number }> = ({ frame, end }
 export const PainScene: React.FC<SceneProps> = ({ durationInFrames }) => {
   const frame = useCurrentFrame();
   let shot: React.ReactNode;
-  if (frame < 140) {
+  if (frame < S03_SHOT.desk[1]) {
     shot = <DeskShot frame={frame} />;
-  } else if (frame < 156) {
+  } else if (frame < S03_SHOT.hero[1]) {
     // He looks at it. Silence — nothing new enters.
-    shot = <HeroShot light={LIGHT.dimmed} framing="close" zoom={1 + 0.006 * mapClamp(frame, [140, 156], [0, 1])} />;
+    shot = <HeroShot light={LIGHT.dimmed} framing="close" zoom={1 + 0.006 * span(frame, S03_SHOT.hero, LINEAR)} />;
   } else {
     shot = <ScreenShotPain frame={frame} end={durationInFrames} />;
   }

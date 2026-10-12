@@ -4,16 +4,20 @@ import { colors, fonts, radii, shadows, type } from '../../campaign/theme';
 import { ease, progress, springAt, springs } from '../../campaign/motion';
 import type { Light } from '../../campaign/light';
 import type { RequestCard as RequestData } from '../../campaign/types';
+import { reviewDecision } from '../../campaign/copy';
 import { useStory } from '../../campaign/StoryContext';
 import { Workspace } from '../../components/set/Workspace';
 import { Cursor, type CursorKey } from '../../components/ui/Cursor';
 import { Check } from '../../components/glyphs/Glyphs';
-import { AFTER_LAYOUT, CARD, CARD_H, SCREEN_LAYOUT, STATUS_FONT_SIZE } from './geometry';
+import { Mask } from '../../components/typography/Reveal';
+import { AFTER_LAYOUT, CARD, CARD_H, REVIEW_GAP, SCREEN_LAYOUT, STATUS_FONT_SIZE, type Pt } from './geometry';
+import { ForegroundFigure } from './Shoulder';
 
 /**
- * The opening shot shared by Scene 01 (BEFORE, a normal day) and Scene 07 (AFTER):
- * the same Workspace framing, the same calm screen, the same request landing in the same
- * place. Only the light and what happens after the request arrives differ.
+ * The opening shot shared by Scene 01 (BEFORE, a normal day), Scene 07 (AFTER) and
+ * Scene 08 (IMPACT — the same AFTER frame, resolved): the same Workspace framing, the same
+ * calm screen, the same request landing in the same place. Only the light and what happens
+ * after the request arrives differ.
  */
 
 const hairline = colors.stoneLine;
@@ -82,9 +86,10 @@ const WorkWindow: React.FC = () => {
 };
 
 /**
- * The device-handover request, as it lands on his screen (a local variant of the shared
- * RequestCard: same anatomy, no time label, and a status row large enough to read when
- * it resolves in Scene 07).
+ * The device-handover request, as it lands on his screen — the one request card of Scenes
+ * 01, 07 and 08 (a local variant of the shared RequestCard: same anatomy, no time label,
+ * and a status row large enough to read when it resolves in Scene 07). Its only orange is
+ * the signal dot; the action chip is neutral.
  */
 export const HandoverCard: React.FC<{
   data: RequestData;
@@ -161,8 +166,8 @@ export const HandoverCard: React.FC<{
             textTransform: 'uppercase',
             padding: '5px 9px',
             borderRadius: 4,
-            color: colors.accent,
-            background: colors.accentSoft,
+            color: colors.mutedOnLight,
+            boxShadow: `inset 0 0 0 1px ${hairline}`,
             opacity: 1 - chipOut,
             whiteSpace: 'nowrap',
           }}
@@ -193,60 +198,141 @@ export const HandoverCard: React.FC<{
   );
 };
 
-/** AFTER: his thin orange line from the request straight down into one record. */
-export const AfterFlow: React.FC<{ draw: number; record: number }> = ({ draw, record }) => {
-  const { line, record: rec } = AFTER_LAYOUT;
-  const y2 = line.y1 + (line.y2 - line.y1) * draw;
-  // the end dot grows as the line arrives (no one-frame pop)
-  const endDot = Math.max(0, Math.min(1, (draw - 0.85) / 0.15));
+/* ------------------------------------------------------------------ AFTER: his line */
+
+/**
+ * The state of the AFTER flow, each 0…1: his line from the request down to the review
+ * node, the node, its options, the human decision, the line on to the record, the record.
+ */
+export type AfterFlowState = { line1: number; node: number; options: number; decided: number; line2: number; record: number };
+
+/** Everything already resolved (Scene 08, and Scene 07 once its flow has run). */
+export const AFTER_RESOLVED: AfterFlowState = { line1: 1, node: 1, options: 1, decided: 1, line2: 1, record: 1 };
+
+const LINE_W = 2.6;
+
+/** A vertical stretch of his line, drawn top → bottom, with a small dot growing at its tip as it arrives. */
+const LineRun: React.FC<{ x: number; y1: number; y2: number; draw: number; tip?: boolean }> = ({ x, y1, y2, draw, tip = false }) => {
+  if (draw <= 0) return null;
+  const y = y1 + (y2 - y1) * draw;
+  const dot = tip ? Math.max(0, Math.min(1, (draw - 0.85) / 0.15)) : 0;
   return (
     <>
-      {draw > 0 ? (
-        <svg width={1280} height={800} style={{ position: 'absolute', left: 0, top: 0, overflow: 'visible' }}>
-          <line x1={line.x} y1={line.y1} x2={line.x} y2={y2} stroke={colors.accent} strokeWidth={2.6} strokeLinecap="round" />
-          {endDot > 0 ? <circle cx={line.x} cy={y2} r={4.5 * endDot} fill={colors.accent} /> : null}
-        </svg>
-      ) : null}
-      {record > 0 ? (
-        <div
-          style={{
-            position: 'absolute',
-            left: rec.x,
-            top: rec.y,
-            width: rec.w,
-            height: rec.h,
-            opacity: record,
-            transform: `translateY(${(1 - record) * 10}px)`,
-          }}
-        >
-          <div
-            style={{
-              position: 'absolute',
-              inset: 0,
-              background: colors.paperRaised,
-              borderRadius: 4,
-              boxShadow: `0 0 0 1px ${hairline}, 0 22px 40px -28px rgba(70,48,24,0.35), 0 4px 10px -6px rgba(70,48,24,0.12)`,
-              clipPath: 'polygon(0 0, calc(100% - 22px) 0, 100% 22px, 100% 100%, 0 100%)',
-            }}
-          />
-          <div style={{ position: 'absolute', right: 0, top: 0, width: 22, height: 22, background: 'linear-gradient(225deg, rgba(0,0,0,0) 50%, #ECE7DE 50%)', boxShadow: '-1px 1px 0 rgba(20,21,22,0.08)' }} />
-          <div style={{ position: 'absolute', left: 18, right: 18, top: 26 }}>
-            <div style={{ width: '50%', height: 6, borderRadius: 6, background: 'rgba(20,21,22,0.22)' }} />
-            <div style={{ height: 16 }} />
-            <Lines widths={[100, 90, 100, 62]} gap={10} height={4} color="rgba(20,21,22,0.11)" />
-            <div style={{ height: 18 }} />
-            <Lines widths={[100, 76]} gap={10} height={4} color="rgba(20,21,22,0.11)" />
-          </div>
+      <line x1={x} y1={y1} x2={x} y2={y} stroke={colors.accent} strokeWidth={LINE_W} strokeLinecap="round" />
+      {dot > 0 ? <circle cx={x} cy={y} r={4.5 * dot} fill={colors.accent} /> : null}
+    </>
+  );
+};
+
+/**
+ * REVIEW — a human decision on his line: a small ring with the options beside it. His click
+ * resolves it: the chosen option comes forward, the others leave, the ring fills.
+ */
+const ReviewNode: React.FC<{ options: string[]; chosen: string; node: number; reveal: number; decided: number }> = ({ options, chosen, node, reveal, decided }) => {
+  const { x, y, r, textDx, fontSize } = AFTER_LAYOUT.review;
+  if (node <= 0) return null;
+  const ink = colors.textOnLight;
+  return (
+    <>
+      <svg width={1280} height={800} style={{ position: 'absolute', left: 0, top: 0, overflow: 'visible' }}>
+        <circle cx={x} cy={y} r={r * node} fill={colors.paperRaised} stroke={colors.accent} strokeWidth={2.2} />
+        {decided > 0 ? <circle cx={x} cy={y} r={(r - 2.2) * decided} fill={colors.accent} /> : null}
+      </svg>
+      {reveal > 0 ? (
+        <div style={{ position: 'absolute', left: x + textDx, top: y - fontSize * 0.62, height: fontSize * 1.3, display: 'flex', alignItems: 'center' }}>
+          <Mask>
+            <span
+              style={{
+                ...type.caption,
+                fontSize,
+                display: 'inline-flex',
+                gap: REVIEW_GAP,
+                whiteSpace: 'nowrap',
+                transform: `translateY(${(1 - reveal) * 1.05}em)`,
+                opacity: Math.min(1, reveal * 1.4),
+              }}
+            >
+              {options.map((opt, k) => {
+                const isChosen = opt === chosen;
+                return (
+                  <React.Fragment key={opt}>
+                    {k > 0 ? <span style={{ color: colors.mutedOnLight, opacity: 1 - decided }}>/</span> : null}
+                    <span style={{ color: isChosen ? ink : colors.mutedOnLight, opacity: isChosen ? 0.62 + 0.38 * decided : 1 - decided }}>{opt}</span>
+                  </React.Fragment>
+                );
+              })}
+            </span>
+          </Mask>
         </div>
       ) : null}
     </>
   );
 };
 
+/** The one record his line arrives at — generated only after the decision. */
+const RecordDoc: React.FC<{ p: number }> = ({ p }) => {
+  const rec = AFTER_LAYOUT.record;
+  if (p <= 0) return null;
+  return (
+    <div style={{ position: 'absolute', left: rec.x, top: rec.y, width: rec.w, height: rec.h, opacity: Math.min(1, p * 1.2), transform: `translateY(${(1 - p) * 10}px)` }}>
+      <div
+        style={{
+          position: 'absolute',
+          inset: 0,
+          background: colors.paperRaised,
+          borderRadius: 4,
+          boxShadow: `0 0 0 1px ${hairline}, 0 22px 40px -28px rgba(70,48,24,0.35), 0 4px 10px -6px rgba(70,48,24,0.12)`,
+          clipPath: 'polygon(0 0, calc(100% - 22px) 0, 100% 22px, 100% 100%, 0 100%)',
+        }}
+      />
+      <div style={{ position: 'absolute', right: 0, top: 0, width: 22, height: 22, background: 'linear-gradient(225deg, rgba(0,0,0,0) 50%, #ECE7DE 50%)', boxShadow: '-1px 1px 0 rgba(20,21,22,0.08)' }} />
+      <div style={{ position: 'absolute', left: 18, right: 18, top: 26 }}>
+        <div style={{ width: '50%', height: 6, borderRadius: 6, background: 'rgba(20,21,22,0.22)' }} />
+        <div style={{ height: 16 }} />
+        <Lines widths={[100, 90, 100, 62]} gap={10} height={4} color="rgba(20,21,22,0.11)" />
+        <div style={{ height: 18 }} />
+        <Lines widths={[100, 76]} gap={10} height={4} color="rgba(20,21,22,0.11)" />
+      </div>
+    </div>
+  );
+};
+
+/**
+ * AFTER: his thin orange line from the request straight down, through the review node (a
+ * person approves or rejects), into one record. Without a decision step in the story's
+ * workflow the line runs straight from the request to the record.
+ */
+export const AfterFlow: React.FC<{ flow: AfterFlowState }> = ({ flow }) => {
+  const { story } = useStory();
+  const decision = reviewDecision(story);
+  const { line1, line2 } = AFTER_LAYOUT;
+  return (
+    <>
+      <svg width={1280} height={800} style={{ position: 'absolute', left: 0, top: 0, overflow: 'visible' }}>
+        {decision ? (
+          <>
+            <LineRun x={line1.x} y1={line1.y1} y2={line1.y2} draw={flow.line1} />
+            <LineRun x={line2.x} y1={line2.y1} y2={line2.y2} draw={flow.line2} tip />
+          </>
+        ) : (
+          <LineRun x={line1.x} y1={line1.y1} y2={line2.y2} draw={flow.line2} tip />
+        )}
+      </svg>
+      {decision ? <ReviewNode options={decision.options} chosen={decision.chosen} node={flow.node} reveal={flow.options} decided={flow.decided} /> : null}
+      <RecordDoc p={flow.record} />
+    </>
+  );
+};
+
+/* ------------------------------------------------------------------ desk */
+
 /** The single squared sheet on his desk (frame coordinates): paper reduced, not gone. */
 export const DESK_SHEET = { x: 1528, y: 900, w: 176, h: 206, tilt: 70 } as const;
 
-const DeskSheet: React.FC<{ light: Light }> = ({ light }) => {
+/** A point on the desk sheet's near-left edge (frame) — where a pin can attach. */
+export const DESK_SHEET_PIN: Pt = { x: DESK_SHEET.x + 14, y: DESK_SHEET.y + 26 };
+
+export const DeskSheet: React.FC<{ light: Light }> = ({ light }) => {
   // paper catches the room's light; it never outshines the screen
   const lit = 0.66 + light.exposure * 0.26;
   return (
@@ -282,12 +368,23 @@ const DeskSheet: React.FC<{ light: Light }> = ({ light }) => {
   );
 };
 
+/* ------------------------------------------------------------------ the shot */
+
+export type OpeningPointer = {
+  keys?: CursorKey[];
+  path?: (frame: number) => Pt;
+  clicks?: number[];
+  /** Ripple colour — neutral unless the click means something (see Cursor). */
+  rippleColor?: string;
+};
+
 /**
  * The opening Workspace: his shoulder, the calm screen, the request landing top-right.
- * Scene 01 and Scene 07 both render this; Scene 07 adds the resolve and his line.
+ * Scene 01 renders it plain; Scene 07 adds the resolve and his flow; Scene 08 renders it
+ * fully resolved (requestStart / resolveAt in the past, `after={AFTER_RESOLVED}`).
  *
- * Reuse (e.g. a later AFTER shot that should match Scene 07's resolved screen):
- *   <OpeningWorkspace light={…} requestStart={-100} resolveAt={-100} after={{ draw: 1, record: 1 }} />
+ * `figureOffset` (Scenes 07–08): draw his shoulder on its own layer, shifted by this many
+ * px (foreground parallax for the split screen; 0 = exactly where Workspace draws it).
  */
 export const OpeningWorkspace: React.FC<{
   light: Light;
@@ -295,24 +392,30 @@ export const OpeningWorkspace: React.FC<{
   requestStart: number;
   resolveAt?: number;
   /** His pointer on the screen canvas (omit for no pointer). */
-  cursor?: { keys: CursorKey[]; clicks?: number[] };
-  after?: { draw: number; record: number };
-}> = ({ light, flash = 0, requestStart, resolveAt, cursor, after }) => {
+  cursor?: OpeningPointer;
+  after?: AfterFlowState;
+  figureOffset?: number;
+}> = ({ light, flash = 0, requestStart, resolveAt, cursor, after, figureOffset }) => {
   const { story } = useStory();
+  const ownFigure = figureOffset !== undefined;
   return (
-    <Workspace
-      light={light}
-      flash={flash}
-      screen={
-        <>
-          <DesktopBar />
-          <WorkWindow />
-          {after ? <AfterFlow draw={after.draw} record={after.record} /> : null}
-          <HandoverCard data={story.person.request} start={requestStart} resolveAt={resolveAt} resolvedText={resolveAt === undefined ? undefined : story.after.status} />
-          {cursor ? <Cursor keys={cursor.keys} clicks={cursor.clicks} /> : null}
-        </>
-      }
-      desk={<DeskSheet light={light} />}
-    />
+    <>
+      <Workspace
+        light={light}
+        flash={flash}
+        figure={!ownFigure}
+        screen={
+          <>
+            <DesktopBar />
+            <WorkWindow />
+            {after ? <AfterFlow flow={after} /> : null}
+            <HandoverCard data={story.person.request} start={requestStart} resolveAt={resolveAt} resolvedText={resolveAt === undefined ? undefined : story.after.status} />
+            {cursor ? <Cursor keys={cursor.keys} path={cursor.path} clicks={cursor.clicks} rippleColor={cursor.rippleColor} /> : null}
+          </>
+        }
+        desk={<DeskSheet light={light} />}
+      />
+      {ownFigure ? <ForegroundFigure light={light} flash={flash} offsetX={figureOffset} /> : null}
+    </>
   );
 };

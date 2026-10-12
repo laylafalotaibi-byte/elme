@@ -1,5 +1,5 @@
 import { Easing } from 'remotion';
-import { progress } from '../../campaign/motion';
+import { glide, progress } from '../../campaign/motion';
 import { NODE_Y, SPINE, type Pt } from './sketch';
 import { S06 } from './timing';
 
@@ -24,14 +24,14 @@ export const END_FRAMING = { c: { x: 905, y: 515 }, s: 1.06 };
 const END = END_FRAMING;
 const START = { c: { x: 960, y: 540 }, s: 1 };
 
-/**
- * Bezier easing with given start/end velocities (relative to the segment's average speed):
- * the camera keeps moving through a step, slowing as it arrives instead of stopping dead.
- */
-const glide = (v0: number, v1: number) => Easing.bezier(1 / 3, v0 / 3, 2 / 3, 1 - v1 / 3);
-
-/** Push-in / pull-back: an unhurried start and a long settle (calmer than ease.inOut). */
+/** Push-in: an unhurried start and a long settle (calmer than ease.inOut). */
 const MOVE = Easing.bezier(0.42, 0, 0.18, 1);
+/**
+ * Pull-back: starts with NOTIFY's arrival and is front-loaded, so the top of the line (where
+ * the sites pop-up is pinned) is back in frame by ≈ f158; the step names ride the move in
+ * from the top edge at ≤ ≈ 43 px/f (a peaky curve would strobe them).
+ */
+const PULL = Easing.bezier(0.3, 0.2, 0.35, 1);
 
 /** Step arrival frames (one per node). */
 export const stepTimes = (count: number): number[] => {
@@ -80,7 +80,7 @@ export type Cam = { s: number; c: Pt };
 
 export const workflowCamera = (frame: number, ys: number[], times: number[], holdAfter: number | null): Cam => {
   const wIn = progress(frame, S06.pushIn[0], S06.pushIn[1] - S06.pushIn[0], MOVE);
-  const wOut = progress(frame, S06.pullBack[0], S06.pullBack[1] - S06.pullBack[0], MOVE);
+  const wOut = progress(frame, S06.pullBack[0], S06.pullBack[1] - S06.pullBack[0], PULL);
   const w = wIn * (1 - wOut);
   const base = frame < S06.pullBack[0] ? START : END;
   const fy = focusAt(frame, focusKeys(ys, times, holdAfter));

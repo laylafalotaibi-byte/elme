@@ -1,24 +1,34 @@
 import React from 'react';
-import { AbsoluteFill, Easing, interpolate, random, useCurrentFrame } from 'remotion';
+import { AbsoluteFill, interpolate, random, useCurrentFrame } from 'remotion';
 import { cutPath, getLength, getPointAtLength } from '@remotion/paths';
 import { colors, shadows } from '../../campaign/theme';
-import { ease, mapClamp, progress } from '../../campaign/motion';
+import { ease, glide, mapClamp, progress, span } from '../../campaign/motion';
+import { useStory } from '../../campaign/StoryContext';
+import { Cursor } from '../../components/ui/Cursor';
+import { PaperForm } from '../../components/ui/artifacts/PaperForm';
+import { FileChip } from '../../components/ui/artifacts/FileChip';
 import { CROSS_OUT, CROSS_POINTS, DRAFT_1, DRAFT_2, INSERT_CAMERA, SKETCH, STRAIGHT, curveToPath, lerpCurve, type Pt } from './sketch';
-import { Pointer } from './Pointer';
 import { S05, S05_LAST } from './timing';
 
 /**
- * Scene 05's screen insert, after the cut: his notes on the right (a page he is reading,
- * with the small figure he is learning from), a blank canvas with the two ends of his
- * problem, and his drafts — a learner's sketches, not an expert's diagram.
+ * Scene 05's screen insert, after the cut: a quiet notebook page. His notes on the right
+ * (a page he is reading — text only), and on the page the two ends of his problem in
+ * miniature — the paper form and a single record — with his drafts between them: a
+ * learner's sketches, not an expert's diagram.
  *
- * Picture layers sit under one slow push (INSERT_CAMERA) and a rack focus (notes → canvas).
+ * Picture layers sit under one slow push (INSERT_CAMERA) and a rack focus (notes → page).
  * Scene 06 renders this frozen on Scene 05's last frame and clears it (`clear`), drawing
  * the line itself.
  */
 
 const PENCIL = '#2B2A27';
 const PANE = { x: 1452, y: 168, w: 600, h: 680, pad: 48 } as const;
+/** Ruled page: one rule every RULE px, offset so his line runs between two rules. */
+const RULE = { gap: 46, offset: 14 } as const;
+/** Speed (px/frame) above which the shared Cursor draws its shutter trail. */
+const TRAIL_FROM = 60;
+/** A reading highlight — neutral (orange is kept for his line). */
+const HIGHLIGHT = 'rgba(150,128,96,0.2)';
 
 const D1 = curveToPath(DRAFT_1);
 const D2 = curveToPath(DRAFT_2);
@@ -32,13 +42,6 @@ const DASH = 11;
 /** The slow push on the insert's picture (1 at the cut → INSERT_CAMERA.zoomEnd on the last frame). */
 export const insertZoom = (frame: number) =>
   1 + (INSERT_CAMERA.zoomEnd - 1) * mapClamp(frame, [S05.cut, S05_LAST], [0, 1], (t) => t * (1.6 - 0.6 * t));
-
-/**
- * Easing with given start / end velocities (relative to the segment's average speed): a hand
- * keeps moving through a key instead of stopping dead at each one (v = 0 → it settles there).
- * Peak speed of glide(0, 0) is 1.5× the average — far gentler than ease.inOut for long moves.
- */
-const glide = (v0: number, v1: number) => Easing.bezier(1 / 3, v0 / 3, 2 / 3, 1 - v1 / 3);
 
 type Key = { f: number; x: number; y: number; v?: number };
 
@@ -62,15 +65,24 @@ const at = (d: string, len: number, p: number): Pt => {
   return pt ? { x: pt.x, y: pt.y } : { x: 0, y: 0 };
 };
 
-const span = (frame: number, s: readonly [number, number], easing = ease.inOut) => progress(frame, s[0], s[1] - s[0], easing);
-
-/** Drawing a draft: an even hand (peak 1.5× average), not a whip. */
-const DRAW = glide(0, 0);
+/** Drawing a draft: an even hand (peak 1.25× average), not a whip. */
+const DRAW = glide(0.5, 0.5);
 /** Crossing out: a quick, nearly even slash that slows a little at the end. */
 const SLASH = glide(0.7, 0.3);
 
+/* ------------------------------------------------------------------ the page */
+
 /** Abstract text: rows of word-shaped bars (nobody should read them — no invented copy). */
-const TextRows: React.FC<{ rows: Array<{ y: number; w: number }>; seed: string; highlight?: (i: number) => number }> = ({ rows, seed, highlight }) => (
+type Row = { y: number; w: number };
+const NOTES: Row[][] = [
+  [{ y: 54, w: 410 }, { y: 82, w: 420 }, { y: 110, w: 310 }],
+  [{ y: 166, w: 416 }, { y: 194, w: 384 }, { y: 222, w: 424 }, { y: 250, w: 252 }],
+  [{ y: 306, w: 402 }, { y: 334, w: 420 }, { y: 362, w: 296 }],
+  [{ y: 418, w: 412 }, { y: 446, w: 366 }, { y: 474, w: 424 }, { y: 502, w: 214 }],
+  [{ y: 558, w: 388 }, { y: 586, w: 198 }],
+];
+
+const TextRows: React.FC<{ rows: Row[]; seed: string; highlight?: (i: number) => number }> = ({ rows, seed, highlight }) => (
   <>
     {rows.map((row, i) => {
       const words: Array<{ x: number; w: number }> = [];
@@ -85,7 +97,7 @@ const TextRows: React.FC<{ rows: Array<{ y: number; w: number }>; seed: string; 
       const h = highlight ? highlight(i) : 0;
       return (
         <React.Fragment key={i}>
-          {h > 0 ? <div style={{ position: 'absolute', left: -8, top: row.y - 9, width: (row.w + 16) * h, height: 28, borderRadius: 4, background: colors.accentSoft }} /> : null}
+          {h > 0 ? <div style={{ position: 'absolute', left: -8, top: row.y - 9, width: (row.w + 16) * h, height: 28, borderRadius: 4, background: HIGHLIGHT }} /> : null}
           {words.map((wd, k) => (
             <div key={k} style={{ position: 'absolute', left: wd.x, top: row.y, width: wd.w, height: 10, borderRadius: 5, background: 'rgba(20,21,22,0.17)' }} />
           ))}
@@ -95,15 +107,13 @@ const TextRows: React.FC<{ rows: Array<{ y: number; w: number }>; seed: string; 
   </>
 );
 
-/** His notes: a page he is reading, with the small figure he is trying to reproduce. */
+/** Reading beat: the first line of his notes is read over READ_LINE. */
+const READ_LINE = [S05.read[0] + 1, S05.read[1] - 1] as const;
+const NOTE_LINE_1 = { from: { x: PANE.x + PANE.pad + 4, y: PANE.y + PANE.pad + NOTES[0][0].y + 5 }, to: { x: PANE.x + PANE.pad + 290, y: PANE.y + PANE.pad + NOTES[0][0].y + 9 } } as const;
+
+/** His notes: a page he is reading. Text only — no figures. */
 const NotesPane: React.FC<{ frame: number }> = ({ frame }) => {
-  // He reads the first line (highlighted as his cursor passes), then studies the figure.
-  const reading: Array<readonly [number, number]> = [READ.line];
-  const read = (i: number) => {
-    const s = reading[i];
-    if (!s) return 0;
-    return progress(frame, s[0], s[1] - s[0], ease.inOut) * (1 - progress(frame, S05.draft1[0] - 1, 14));
-  };
+  const read = (i: number) => (i === 0 ? progress(frame, READ_LINE[0], READ_LINE[1] - READ_LINE[0], ease.inOut) * (1 - progress(frame, S05.draft1[0] - 1, 14)) : 0);
   return (
     <div
       style={{
@@ -117,97 +127,82 @@ const NotesPane: React.FC<{ frame: number }> = ({ frame }) => {
         boxShadow: `0 0 0 1px ${colors.stoneLine}, ${shadows.light}`,
       }}
     >
-      <div style={{ position: 'absolute', left: PANE.pad, top: PANE.pad, width: 420 }}>
-        <div style={{ position: 'absolute', left: 0, top: 0, width: 200, height: 14, borderRadius: 7, background: 'rgba(20,21,22,0.44)' }} />
-        <TextRows seed="notes-a" rows={[{ y: 54, w: 410 }, { y: 82, w: 420 }, { y: 110, w: 310 }]} highlight={read} />
-        {/* the figure he is learning from */}
-        <div style={{ position: 'absolute', left: 0, top: 150, width: 420, height: 160, borderRadius: 10, background: 'rgba(20,21,22,0.035)', boxShadow: `inset 0 0 0 1px ${colors.stoneLine}` }}>
-          <svg width={420} height={160} style={{ position: 'absolute', inset: 0 }}>
-            <rect x={58} y={64} width={32} height={32} rx={6} fill="none" stroke="rgba(20,21,22,0.62)" strokeWidth={1.8} />
-            <rect x={330} y={64} width={32} height={32} rx={6} fill="none" stroke="rgba(20,21,22,0.62)" strokeWidth={1.8} />
-            <line x1={98} y1={80} x2={322} y2={80} stroke="rgba(20,21,22,0.62)" strokeWidth={1.8} />
-          </svg>
-        </div>
-        <TextRows seed="notes-b" rows={[{ y: 350, w: 416 }, { y: 378, w: 370 }, { y: 406, w: 424 }, { y: 434, w: 240 }]} />
-        <TextRows seed="notes-c" rows={[{ y: 488, w: 400 }, { y: 516, w: 330 }, { y: 544, w: 190 }]} />
+      <div style={{ position: 'absolute', left: PANE.pad, top: PANE.pad, width: 430 }}>
+        <div style={{ position: 'absolute', left: 0, top: 0, width: 200, height: 14, borderRadius: 7, background: 'rgba(20,21,22,0.36)' }} />
+        {NOTES.map((rows, k) => (
+          <TextRows key={k} seed={`notes-${k}`} rows={rows} highlight={k === 0 ? read : undefined} />
+        ))}
       </div>
     </div>
   );
 };
 
-/** A learner's dashed placeholder box with a tiny glyph (a form → a record). */
-const SketchBox: React.FC<{ x: number; y: number; size: number; glyph: 'form' | 'record' }> = ({ x: cx, y: cy, size, glyph }) => {
-  const x = cx - size / 2;
-  const y = cy - size / 2;
+/** A quiet ruled page — his notebook — fading out towards the edges of the screen. */
+const NotebookPage: React.FC<{ opacity: number }> = ({ opacity }) => {
+  const mask = 'radial-gradient(ellipse 72% 70% at 46% 52%, #000 55%, rgba(0,0,0,0) 100%)';
   return (
-    <g>
-      <rect x={x} y={y} width={size} height={size} rx={12} fill="none" stroke={PENCIL} strokeOpacity={0.72} strokeWidth={2.2} strokeDasharray="8 7" />
-      {glyph === 'form' ? (
-        <g stroke={PENCIL} strokeOpacity={0.6} strokeWidth={1.9} fill="none" strokeLinecap="round">
-          <rect x={cx - 14} y={cy - 19} width={28} height={38} rx={2.5} />
-          <line x1={cx - 7} y1={cy - 8} x2={cx + 7} y2={cy - 8} />
-          <line x1={cx - 7} y1={cy} x2={cx + 7} y2={cy} />
-          <line x1={cx - 7} y1={cy + 8} x2={cx + 2} y2={cy + 8} />
-        </g>
-      ) : (
-        <g stroke={PENCIL} strokeOpacity={0.6} strokeWidth={1.9} fill="none" strokeLinejoin="round">
-          <rect x={cx - 9} y={cy - 20} width={28} height={36} rx={2.5} />
-          <rect x={cx - 17} y={cy - 12} width={28} height={36} rx={2.5} fill={colors.paperRaised} />
-        </g>
-      )}
-    </g>
+    <AbsoluteFill
+      style={{
+        opacity,
+        backgroundImage: `repeating-linear-gradient(180deg, rgba(0,0,0,0) 0px, rgba(0,0,0,0) ${RULE.gap - 1}px, rgba(84,70,52,0.085) ${RULE.gap - 1}px, rgba(84,70,52,0.085) ${RULE.gap}px)`,
+        backgroundPosition: `0 ${RULE.offset}px`,
+        maskImage: mask,
+        WebkitMaskImage: mask,
+      }}
+    />
+  );
+};
+
+/** The two ends of his problem, in miniature: the film's own paper form and a single record. */
+const MiniArtefacts: React.FC = () => {
+  const { story } = useStory();
+  const a = story.before.artifacts;
+  const FORM = { w: 300, k: 0.36 };
+  const RECORD = { w: 236, k: 0.62 };
+  return (
+    <>
+      <div style={{ position: 'absolute', left: SKETCH.form.x, top: SKETCH.form.y, transform: `translate(-50%, -50%) rotate(-3deg) scale(${FORM.k})`, transformOrigin: '50% 50%' }}>
+        <PaperForm {...a.form} fill={1} sign={0} width={FORM.w} style={{ boxShadow: '0 30px 40px -24px rgba(40,30,20,0.5), 0 4px 10px rgba(40,30,20,0.18)' }} />
+      </div>
+      <div style={{ position: 'absolute', left: SKETCH.record.x, top: SKETCH.record.y - 3, transform: `translate(-50%, -50%) scale(${RECORD.k})`, transformOrigin: '50% 50%' }}>
+        <FileChip location="" fileName={a.records.fileName} tone="light" width={RECORD.w} />
+      </div>
+    </>
   );
 };
 
 /* ------------------------------------------------------------------ his hand */
 
-/** Notes-pane landmarks (frame coordinates before the push): line 1, the figure's two boxes. */
-const NOTE_LINE_1 = { from: { x: PANE.x + PANE.pad + 4, y: 278 }, to: { x: PANE.x + PANE.pad + 284, y: 282 } } as const;
-const FIGURE = { a: { x: PANE.x + PANE.pad + 76, y: 448 }, b: { x: PANE.x + PANE.pad + 342, y: 450 } } as const;
-
-/** Reading beats: line 1 is read over READ.line, then the figure is traced, then he goes to the canvas. */
-const READ = {
-  line: [S05.read[0] + 1, S05.read[0] + 8] as const,
-  figure: [S05.read[0] + 13, S05.read[1]] as const,
-};
-
 /**
- * His cursor at any (fractional) frame: reads, studies the figure, draws, crosses out, draws
- * again and straightens. Sampled at fractional frames for the motion trail.
+ * His cursor at any (fractional) frame: reads, turns to the page, draws, crosses out,
+ * draws again and straightens. Sampled at fractional frames by <Cursor> for its shutter trail.
  */
-export const cursorAt = (f: number): { pos: Pt; down: number } => {
+export const cursorAt = (f: number): Pt => {
   if (f < S05.draft1[0]) {
-    return {
-      pos: along(f, [
-        { f: S05.cut, x: NOTE_LINE_1.from.x + 32, y: NOTE_LINE_1.from.y + 40 },
-        { f: READ.line[0], ...NOTE_LINE_1.from, v: 0.5 },
-        { f: READ.line[1], ...NOTE_LINE_1.to, v: 0.25 },
-        { f: READ.figure[0], ...FIGURE.a, v: 0.35 },
-        { f: READ.figure[1], ...FIGURE.b },
-        { f: S05.draft1[0], ...SKETCH.start },
-      ]),
-      down: 0,
-    };
+    return along(f, [
+      { f: S05.cut, x: NOTE_LINE_1.from.x + 40, y: NOTE_LINE_1.from.y + 46 },
+      { f: READ_LINE[0], ...NOTE_LINE_1.from, v: 0.4 },
+      { f: READ_LINE[1], ...NOTE_LINE_1.to },
+      { f: S05.read[1], x: NOTE_LINE_1.to.x - 4, y: NOTE_LINE_1.to.y + 6 },
+      // he turns to the page: one quick move that runs straight into the first stroke
+      { f: S05.draft1[0], ...SKETCH.start, v: 0.4 },
+    ]);
   }
-  if (f <= S05.draft1[1]) return { pos: at(D1, D1_LEN, span(f, S05.draft1, DRAW)), down: 1 };
-  if (f < S05.cross1[0]) return { pos: along(f, [{ f: S05.draft1[1], ...SKETCH.end }, { f: S05.cross1[0], ...CROSS_POINTS.first.from, v: 0.5 }]), down: 0 };
-  if (f <= S05.cross1[1]) return { pos: at(X1, X1_LEN, span(f, S05.cross1, SLASH)), down: 1 };
-  if (f < S05.cross2[0]) return { pos: along(f, [{ f: S05.cross1[1], ...CROSS_POINTS.first.to, v: 0.3 }, { f: S05.cross2[0], ...CROSS_POINTS.second.from, v: 0.5 }]), down: 0 };
-  if (f <= S05.cross2[1]) return { pos: at(X2, X2_LEN, span(f, S05.cross2, SLASH)), down: 1 };
-  if (f < S05.draft2[0]) return { pos: along(f, [{ f: S05.cross2[1], ...CROSS_POINTS.second.to, v: 0.3 }, { f: S05.draft2[0], ...SKETCH.start }]), down: 0 };
-  if (f <= S05.draft2[1]) return { pos: at(D2, D2_LEN, span(f, S05.draft2, DRAW)), down: 1 };
+  if (f <= S05.draft1[1]) return at(D1, D1_LEN, span(f, S05.draft1, DRAW));
+  if (f < S05.cross1[0]) return along(f, [{ f: S05.draft1[1], ...SKETCH.end }, { f: S05.cross1[0], ...CROSS_POINTS.first.from, v: 0.5 }]);
+  if (f <= S05.cross1[1]) return at(X1, X1_LEN, span(f, S05.cross1, SLASH));
+  if (f < S05.cross2[0]) return along(f, [{ f: S05.cross1[1], ...CROSS_POINTS.first.to, v: 0.3 }, { f: S05.cross2[0], ...CROSS_POINTS.second.from, v: 0.5 }]);
+  if (f <= S05.cross2[1]) return at(X2, X2_LEN, span(f, S05.cross2, SLASH));
+  if (f < S05.draft2[0]) return along(f, [{ f: S05.cross2[1], ...CROSS_POINTS.second.to, v: 0.3 }, { f: S05.draft2[0], ...SKETCH.start }]);
+  if (f <= S05.draft2[1]) return at(D2, D2_LEN, span(f, S05.draft2, DRAW));
   const lineD = curveToPath(lerpCurve(DRAFT_2, STRAIGHT, span(f, S05.straighten)));
   const mid = at(lineD, getLength(lineD), 0.5);
-  if (f < S05.grab[1]) return { pos: along(f, [{ f: S05.draft2[1], ...SKETCH.end }, { f: S05.grab[1], ...mid }]), down: 0 };
-  return { pos: mid, down: f < S05.straighten[1] + 2 ? 1 : 0 };
+  if (f < S05.grab[1]) return along(f, [{ f: S05.draft2[1], ...SKETCH.end }, { f: S05.grab[1], ...mid }]);
+  return mid;
 };
 
-/** Speed (px/frame) above which a faint motion smear is drawn behind the pointer (a shutter, not an effect). */
-const TRAIL_FROM = 60;
-const TRAIL_STEPS = [0.12, 0.24, 0.36, 0.48, 0.6];
-
 export const LearningInsert: React.FC<{
-  /** 0 = Scene 05 as shot; 1 = notes, boxes, drafts and cursor cleared away (Scene 06). */
+  /** 0 = Scene 05 as shot; 1 = page, notes, artefacts, drafts and cursor cleared away (Scene 06). */
   clear?: number;
   /** Scene 06 draws the line itself. */
   hideLine?: boolean;
@@ -219,7 +214,7 @@ export const LearningInsert: React.FC<{
   const keep = 1 - clear;
   const zoom = insertZoom(frame);
 
-  // Rack focus: his notes are sharp while he reads, then focus pulls to the canvas.
+  // Rack focus: his notes are sharp while he reads, then focus pulls to the page.
   const toCanvas = progress(frame, S05.read[1], 14, ease.inOut);
   const paneBlur = 5 * toCanvas;
   const canvasBlur = 2.6 * (1 - toCanvas);
@@ -237,39 +232,26 @@ export const LearningInsert: React.FC<{
   const lineD = curveToPath(lerpCurve(DRAFT_2, STRAIGHT, straight));
   const shown = p2 >= 1 ? lineD : p2 > 0 ? cutPath(D2, D2_LEN * p2) : null;
   const gap = DASH * (1 - solid);
-
-  // His hand, with a faint trail on the few fast moves (a camera's motion blur, not an effect).
-  const cursor = cursorAt(frame);
-  const prev = cursorAt(frame - 1).pos;
-  const speed = Math.hypot(cursor.pos.x - prev.x, cursor.pos.y - prev.y);
-  const blur = Math.min(1, Math.max(0, (speed - TRAIL_FROM) / 110));
-  // a short smear across the last ~2/3 frame (shutter), densest near the pointer
-  const trail = blur > 0.02 ? TRAIL_STEPS.map((dt, k) => ({ p: cursorAt(frame - dt).pos, o: blur * 0.2 * (1 - k / TRAIL_STEPS.length) })) : [];
+  const blur = (px: number) => (px > 0.05 ? `blur(${px}px)` : undefined);
+  const prev = cursorAt(frame - 1);
+  const now = cursorAt(frame);
+  const motionBlur = 1.4 * Math.min(1, Math.max(0, (Math.hypot(now.x - prev.x, now.y - prev.y) - TRAIL_FROM) / 110));
 
   return (
     <AbsoluteFill style={{ transform: `scale(${zoom})`, transformOrigin: `${INSERT_CAMERA.origin.x}px ${INSERT_CAMERA.origin.y}px` }}>
-      {/* a blank canvas: the faintest dot grid */}
-      <AbsoluteFill
-        style={{
-          opacity: keep,
-          backgroundImage: 'radial-gradient(circle at 1.5px 1.5px, rgba(20,21,22,0.12) 1.4px, rgba(0,0,0,0) 1.7px)',
-          backgroundSize: '32px 32px',
-          backgroundPosition: '4px 12px',
-        }}
-      />
-      <div style={{ opacity: keep, transform: `translateX(${clear * 40}px)`, filter: paneBlur > 0.05 ? `blur(${paneBlur}px)` : undefined }}>
+      <NotebookPage opacity={keep} />
+      <div style={{ opacity: keep, transform: `translateX(${clear * 40}px)`, filter: blur(paneBlur) }}>
         <NotesPane frame={frame} />
       </div>
 
-      <svg width={1920} height={1080} style={{ position: 'absolute', inset: 0, overflow: 'visible', filter: canvasBlur > 0.05 ? `blur(${canvasBlur}px)` : undefined }}>
-        <g opacity={keep}>
-          <SketchBox {...SKETCH.boxA} glyph="form" />
-          <SketchBox {...SKETCH.boxB} glyph="record" />
-          <g opacity={draft1Opacity}>
-            {p1 > 0 ? <path d={p1 >= 1 ? D1 : cutPath(D1, D1_LEN * p1)} fill="none" stroke={PENCIL} strokeWidth={2.8} strokeDasharray={`${DASH} ${DASH}`} strokeLinecap="round" /> : null}
-            {px1 > 0 ? <path d={px1 >= 1 ? X1 : cutPath(X1, X1_LEN * px1)} fill="none" stroke={PENCIL} strokeWidth={3.4} strokeLinecap="round" /> : null}
-            {px2 > 0 ? <path d={px2 >= 1 ? X2 : cutPath(X2, X2_LEN * px2)} fill="none" stroke={PENCIL} strokeWidth={3.4} strokeLinecap="round" /> : null}
-          </g>
+      <AbsoluteFill style={{ opacity: keep, filter: blur(canvasBlur) }}>
+        <MiniArtefacts />
+      </AbsoluteFill>
+      <svg width={1920} height={1080} style={{ position: 'absolute', inset: 0, overflow: 'visible', filter: blur(canvasBlur) }}>
+        <g opacity={keep * draft1Opacity}>
+          {p1 > 0 ? <path d={p1 >= 1 ? D1 : cutPath(D1, D1_LEN * p1)} fill="none" stroke={PENCIL} strokeWidth={2.8} strokeDasharray={`${DASH} ${DASH}`} strokeLinecap="round" /> : null}
+          {px1 > 0 ? <path d={px1 >= 1 ? X1 : cutPath(X1, X1_LEN * px1)} fill="none" stroke={PENCIL} strokeWidth={3.4} strokeLinecap="round" /> : null}
+          {px2 > 0 ? <path d={px2 >= 1 ? X2 : cutPath(X2, X2_LEN * px2)} fill="none" stroke={PENCIL} strokeWidth={3.4} strokeLinecap="round" /> : null}
         </g>
         {!hideLine && shown ? (
           <path
@@ -283,15 +265,13 @@ export const LearningInsert: React.FC<{
         ) : null}
       </svg>
 
-      {trail.length > 0 ? (
-        // one soft layer, so it reads as shutter smear rather than "pointer trails"
-        <AbsoluteFill style={{ filter: 'blur(1.6px)' }}>
-          {trail.map((t, k) => (
-            <Pointer key={k} x={t.p.x} y={t.p.y} down={cursor.down} opacity={keep * t.o} frame={frame} />
-          ))}
-        </AbsoluteFill>
-      ) : null}
-      <Pointer x={cursor.pos.x} y={cursor.pos.y} down={cursor.down} opacity={keep} frame={frame} />
+      {/*
+        His hand. The shared cursor draws its shutter trail on the few fast moves; a matching
+        motion blur on the layer (only while fast) lets that trail read as smear, not as copies.
+      */}
+      <AbsoluteFill style={{ filter: blur(motionBlur) }}>
+        <Cursor path={frameOverride === undefined ? cursorAt : () => cursorAt(frameOverride)} scale={1.5} opacity={keep} />
+      </AbsoluteFill>
     </AbsoluteFill>
   );
 };

@@ -1,8 +1,9 @@
 import { Easing, interpolate, random } from 'remotion';
 import { LIGHT, mixLight, type Light } from '../../campaign/light';
-import { ease, mapClamp } from '../../campaign/motion';
+import { ease, glide, span } from '../../campaign/motion';
 import type { BeforeArtifactKind, StoryConfig } from '../../campaign/types';
 import { SCREEN_CANVAS } from '../../components/set/Workspace';
+import { S02_LIGHT_RAMP, type Waypoint } from './timing';
 
 /**
  * Shared helpers for the BEFORE stretch of the film (Scenes 02 · 03 · 04).
@@ -14,7 +15,7 @@ export const REQUEST_SLOT = { x: 700, y: 40, w: 540 } as const;
 
 /** Scene 02: the room darkens as the work piles up (normalDay → dimmed, settled before the hold). */
 export const beforeLight = (frame: number): Light =>
-  mixLight(LIGHT.normalDay, LIGHT.dimmed, mapClamp(frame, [4, 212], [0, 1], Easing.bezier(0.42, 0, 0.5, 1)));
+  mixLight(LIGHT.normalDay, LIGHT.dimmed, span(frame, S02_LIGHT_RAMP, Easing.bezier(0.42, 0, 0.5, 1)));
 
 /** Step caption for an artefact kind (verbatim from the config). */
 export const stepLabel = (story: StoryConfig, kind: BeforeArtifactKind): string | null =>
@@ -37,7 +38,7 @@ export const canvasToFrame = (p: { x: number; y: number }, cam: Cam) => {
 
 /** A slow push between two camera keys across a shot. */
 export const camBetween = (frame: number, from: number, to: number, a: Cam, b: Cam): Cam => {
-  const t = mapClamp(frame, [from, to], [0, 1], ease.inOut);
+  const t = span(frame, [from, to], ease.inOut);
   return {
     zoom: a.zoom + (b.zoom - a.zoom) * t,
     focus: { x: a.focus.x + (b.focus.x - a.focus.x) * t, y: a.focus.y + (b.focus.y - a.focus.y) * t },
@@ -47,6 +48,30 @@ export const camBetween = (frame: number, from: number, to: number, a: Cam, b: C
 /** Same camera, pushed in by `amount` over the shot (≈ 2–3 % keeps it a breath, not a zoom). */
 export const pushCam = (frame: number, from: number, to: number, cam: Cam, amount = 0.03): Cam =>
   camBetween(frame, from, to, cam, { ...cam, zoom: cam.zoom * (1 + amount) });
+
+/* ----------------------------------------------------------------- his cursor */
+
+/**
+ * A cursor path through waypoints: each move glides from rest to rest (peak 1.5× its
+ * average speed — nothing teleports). Before the first waypoint it waits at the first;
+ * after the last it rests there. Pass to <Cursor path>.
+ */
+export const glidePath =
+  (points: ReadonlyArray<Waypoint>) =>
+  (frame: number): { x: number; y: number } => {
+    if (points.length === 0) return { x: 0, y: 0 };
+    if (frame <= points[0].f) return { x: points[0].x, y: points[0].y };
+    for (let i = 1; i < points.length; i++) {
+      const a = points[i - 1];
+      const b = points[i];
+      if (frame <= b.f) {
+        const t = span(frame, [a.f, b.f], glide(0, 0));
+        return { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t };
+      }
+    }
+    const last = points[points.length - 1];
+    return { x: last.x, y: last.y };
+  };
 
 /* ----------------------------------------------------------------- drift */
 

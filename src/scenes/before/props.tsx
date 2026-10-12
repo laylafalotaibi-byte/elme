@@ -121,14 +121,9 @@ export const DeskLight: React.FC<{ light: Light; pool?: { x: number; y: number }
 };
 
 /**
- * Work-around: the shared PaperForm strokes (signature + handwriting) leave a round-cap dot
- * at the end of their path when draw = 0 (dasharray 1 / offset 1). An unsigned / unfilled
- * sheet hides those strokes instead.
+ * A paper handover form lying on the desk (frame coordinates, centre-anchored).
+ * `variant` changes the handwriting: the same form, filled in by someone at another site.
  */
-export const NO_SIGNATURE_CSS =
-  '.before-unsigned svg[viewBox="0 0 200 64"]{visibility:hidden}.before-unfilled svg[viewBox="0 0 160 16"]{visibility:hidden}';
-
-/** A paper handover form lying on the desk (frame coordinates, centre-anchored). */
 export const Sheet: React.FC<{
   form: BeforeArtifacts['form'];
   x: number;
@@ -137,11 +132,11 @@ export const Sheet: React.FC<{
   rotate?: number;
   fill?: number;
   sign?: number;
+  variant?: number;
   shadow?: boolean;
   style?: React.CSSProperties;
-}> = ({ form, x, y, scale = 1, rotate = 0, fill = 1, sign = 1, shadow = true, style }) => (
+}> = ({ form, x, y, scale = 1, rotate = 0, fill = 1, sign = 1, variant = 0, shadow = true, style }) => (
   <div
-    className={[sign <= 0 ? 'before-unsigned' : '', fill <= 0 ? 'before-unfilled' : ''].join(' ').trim() || undefined}
     style={{
       position: 'absolute',
       left: x - 180,
@@ -152,13 +147,13 @@ export const Sheet: React.FC<{
       ...style,
     }}
   >
-    {sign <= 0 || fill <= 0 ? <style>{NO_SIGNATURE_CSS}</style> : null}
     <PaperForm
       title={form.title}
       fields={form.fields}
       signatureLabel={form.signatureLabel}
       fill={fill}
       sign={sign}
+      variant={variant}
       width={360}
       style={shadow ? undefined : { boxShadow: '0 1px 2px rgba(0,0,0,0.25)' }}
     />

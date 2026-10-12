@@ -2,69 +2,97 @@ import React from 'react';
 import { AbsoluteFill, interpolateColors, useCurrentFrame, useVideoConfig } from 'remotion';
 import { evolvePath } from '@remotion/paths';
 import { colors, type } from '../campaign/theme';
-import { ease, progress, springAt, springs } from '../campaign/motion';
+import { ease, glide, progress, span, springAt, springs } from '../campaign/motion';
 import { LIGHT, roomPalette } from '../campaign/light';
 import { useStory } from '../campaign/StoryContext';
+import { reviewDecision } from '../campaign/copy';
 import { ScreenInsert } from '../components/set/Inserts';
 import { MetricPopup } from '../components/ui/MetricPopup';
+import { Cursor } from '../components/ui/Cursor';
+import { MASK_PADDING } from '../components/typography/Reveal';
 import { LearningInsert } from './workflow/LearningInsert';
 import { InsertTitles } from './workflow/InsertTitles';
 import { RoomLight } from './workflow/RoomLight';
 import { FoldingArtefacts } from './workflow/FoldingArtefacts';
-import { Pointer } from './workflow/Pointer';
-import { END_FRAMING, project, stepTimes, nodeYs, workflowCamera, worldTransform } from './workflow/camera';
+import { END_FRAMING, project, stepTimes, nodeYs, workflowCamera, worldTransform, type Cam } from './workflow/camera';
 import { SITE_ORIGINS_X, SPINE, branchEnd, branchPath, sitePath, sketchLineAtCut, swingLine, type Pt } from './workflow/sketch';
-import { S05_LAST, S06 } from './workflow/timing';
+import { S05_END, S05_LAST, S06 } from './workflow/timing';
 import type { SceneProps } from './types';
 
 /**
  * Scene 06 — Building the Solution · BETTER WAY · light warm daylight.
  *
- *   0–30     Scene 05's last frame: his straightened line turns orange and swings vertical;
- *            the notes and drafts clear; the room fills with warm daylight
- *   16–42    hairlines converge from off-frame into the top of the line — "Sites"
- *   32–56    the camera pushes in on the top of the line …
- *   40–150   … and tracks down it. One step at a time, each arriving as the camera reaches
- *            it and leaving upward as the next arrives (a small label stays on the line):
- *            SUBMIT 40 (the paper form flattens into it) · TRIGGER 57 ·
- *            REVIEW 74 — "Approve / Reject"; his click resolves it to Approve (88) and only
- *            then does the line move on (94) · GENERATE RECORD 110 ·
- *            CENTRALIZE 127 (scattered files merge into one) ·
- *            NOTIFY 144 (the email collapses into it) → branches to the two targets
- *   148–174  one pull-back: the whole line, all six steps
- *   160/172  impact pinned to the process: sites at the convergence, records at CENTRALIZE
+ *   0–18     Scene 05 continues: IMPROVE and the supporting line hold (≥ their reading
+ *            time), then leave; the notes, page and drafts clear
+ *   3–30     his straightened line turns orange and swings vertical; warm daylight fills the room
+ *   14–41    hairlines converge from off-frame into the top of the line — "Sites" (31 → 52)
+ *   29–52    the camera pushes in on the top of the line …
+ *   43–150   … and tracks down it. One step at a time: each big word arrives as the camera
+ *            reaches its tick on the line, and as it leaves, its name settles small beside
+ *            the tick and stays — every step stays named from its arrival to the end:
+ *            SUBMIT 43 (the paper form, filled in, flattens into it) · TRIGGER 58 ·
+ *            REVIEW 73 — his hand comes in from the frame edge (69), the options rise (77),
+ *            his click resolves it to the first option (90); only then does the line move
+ *            on (95) · GENERATE RECORD 108 · CENTRALIZE 123 (scattered files, out of focus,
+ *            merge into one) · NOTIFY 138 (the email collapses into it) → branches (140)
+ *            to the two targets (148)
+ *   138–172  one pull-back from NOTIFY to the whole line, all six steps named
+ *   156/166  impact pinned to the process: sites at the convergence (as it comes back into
+ *            frame), records at CENTRALIZE
  *   → 210    hold
  *
- * No travelling token, no kicker, no sub-labels besides Approve / Reject. System 800 never
+ * No travelling token, no kicker, no sub-labels besides the review options. System 800 never
  * appears. Type and pop-ups sit outside the scaling camera, at projected positions.
  */
 
+/** The big step word as the camera reaches it (displayM, uppercase as the brief writes it). */
 const STEP_WORD: React.CSSProperties = { ...type.displayM, letterSpacing: '-0.012em', textTransform: 'uppercase', whiteSpace: 'nowrap' };
-const STEP_LABEL: React.CSSProperties = { ...type.title, fontSize: 30, letterSpacing: '0.045em', textTransform: 'uppercase', whiteSpace: 'nowrap' };
+/** The name that stays beside its tick: caption size and weight, lightly tracked — a note on his line, not a UI stepper. */
+const STEP_LABEL: React.CSSProperties = { ...type.caption, letterSpacing: '0.06em', textTransform: 'uppercase', whiteSpace: 'nowrap' };
+const LABEL_INK = '#2A2825';
 
 const PENCIL = '#2B2A27';
 /** MetricPopup: distance from its top to the middle of its value row (label 20 px + 14 gap + value). */
 const POPUP_VALUE_MID = 56;
+/** Impact pop-ups: width, and the gap (world px) between their right edge and his line. */
+const POPUP_W = 520;
+const POPUP_GAP = { sites: 190, records: 90 } as const;
+/** Tick on his line at each step (world px): a short mark off the line, towards the step's name. */
+const TICK = { length: 11, width: 2.4 } as const;
 
 /** Masked rise / exit for a single line of type (frame-local). */
-const Rise: React.FC<{ frame: number; start: number; exitAt?: number; duration?: number; exitDuration?: number; children: React.ReactNode; style?: React.CSSProperties }> = ({
-  frame,
-  start,
-  exitAt,
-  duration = 16,
-  exitDuration = 10,
-  children,
-  style,
-}) => {
+const Rise: React.FC<{
+  frame: number;
+  start: number;
+  exitAt?: number;
+  duration?: number;
+  exitDuration?: number;
+  exitEasing?: (t: number) => number;
+  children: React.ReactNode;
+  style?: React.CSSProperties;
+}> = ({ frame, start, exitAt, duration = 16, exitDuration = 10, exitEasing = ease.inOut, children, style }) => {
   if (frame < start) return null;
   const p = progress(frame, start, duration, ease.out);
-  const out = exitAt === undefined ? 0 : progress(frame, exitAt, exitDuration, ease.inOut);
+  const out = exitAt === undefined ? 0 : progress(frame, exitAt, exitDuration, exitEasing);
   if (out >= 1) return null;
   return (
-    <div style={{ position: 'absolute', overflow: 'hidden', padding: '0.06em 0.12em 0.16em 0.04em', margin: '-0.06em -0.12em -0.16em -0.04em', ...style }}>
+    <div style={{ position: 'absolute', overflow: 'hidden', ...MASK_PADDING, ...style }}>
       <div style={{ transform: `translateY(${(1 - p) * 1.05 - out * 0.5}em)`, opacity: Math.min(1, p * 1.4) * (1 - out) }}>{children}</div>
     </div>
   );
+};
+
+/** His hand at REVIEW, in frame space: in from the bottom edge, onto the option, click, and away out of frame. */
+const reviewHand = (cam: (f: number) => Cam, target: (c: Cam) => Pt) => (f: number): Pt => {
+  const at = target(cam(f));
+  const from = { x: at.x + 300, y: 1080 + 60 };
+  const away = { x: at.x + 420, y: 1080 + 80 };
+  const arrive = progress(f, S06.reviewPointer, S06.approveClick - 3 - S06.reviewPointer, glide(0, 0));
+  const leave = progress(f, S06.reviewResume + 2, 18, glide(0, 0.6));
+  return {
+    x: from.x + (at.x - from.x) * arrive + (away.x - at.x) * leave,
+    y: from.y + (at.y - from.y) * arrive + (away.y - at.y) * leave,
+  };
 };
 
 export const WorkflowScene: React.FC<SceneProps> = () => {
@@ -74,49 +102,50 @@ export const WorkflowScene: React.FC<SceneProps> = () => {
   const steps = story.workflow.steps;
   const targets = story.workflow.notifyTargets;
   const [inWorkflowA, inWorkflowB] = story.impact.inWorkflow;
+  const decision = reviewDecision(story);
 
   const ys = nodeYs(steps.length);
   const times = stepTimes(steps.length);
-  const decision = steps.findIndex((s) => Boolean(s.caption));
-  const holdAfter = decision >= 0 ? decision : null;
-  const cam = workflowCamera(frame, ys, times, holdAfter);
+  const holdAfter = decision ? decision.index : null;
+  const camAt = (f: number) => workflowCamera(f, ys, times, holdAfter);
+  const cam = camAt(frame);
   const nodes: Pt[] = ys.map((y) => ({ x: SPINE.x, y }));
   const P = (p: Pt) => project(cam, p);
 
   // Light: from Scene 05's warm, low-key screen to warm daylight on paper.
-  const day = progress(frame, S06.daylight[0], S06.daylight[1] - S06.daylight[0], ease.inOut);
+  const day = span(frame, S06.daylight);
   const paperDay = roomPalette(LIGHT.warmDay).screen;
 
-  // Scene 05 leaves.
-  const clear = progress(frame, S06.clear[0], S06.clear[1] - S06.clear[0], ease.inOut);
-  // IMPROVE (and the supporting line) only land a few frames before Scene 05 ends: let them
-  // stay while the line starts to turn, then leave as it swings.
-  const titlesOut = progress(frame, S06.titlesOut[0], S06.titlesOut[1] - S06.titlesOut[0], ease.in);
+  // Scene 05 leaves: its page clears; its words hold their reading time, then leave before the swinging line reaches them.
+  const clear = span(frame, S06.clear);
+  const titlesOut = span(frame, S06.titlesOut, ease.in);
 
   // His line: turns orange, swings vertical.
-  const orange = progress(frame, S06.orange[0], S06.orange[1] - S06.orange[0], ease.inOut);
-  const swing = progress(frame, S06.swing[0], S06.swing[1] - S06.swing[0], ease.inOut);
+  const orange = span(frame, S06.orange);
+  const swing = span(frame, S06.swing);
   const line = swingLine(swing);
   const lineColor = interpolateColors(orange, [0, 1], [PENCIL, colors.accent]);
   const lineWidth = sketchLineAtCut().strokeWidth + (SPINE.strokeWidth - sketchLineAtCut().strokeWidth) * swing;
 
-  // Steps: one big word at a time while tracking; the small labels settle together on the pull-back.
-  // The outgoing word is half gone as the next starts to rise, so two step words never sit
-  // side by side like a list.
+  // Steps: one big word at a time while tracking. As it leaves (the next is about to arrive),
+  // its name settles small beside its tick and stays — never two big words side by side.
   const wordExit = (i: number) => (i < steps.length - 1 ? times[i + 1] - 4 : S06.lastWordOut);
-  const labelP = (i: number) => {
-    const s = i === steps.length - 1 ? S06.lastLabel : S06.labels;
-    return progress(frame, s[0], s[1] - s[0], ease.out);
-  };
+  const labelP = (i: number) => progress(frame, wordExit(i) + S06.labelDelay, S06.labelSettle, ease.out);
+  const tickAt = (i: number) => (i === 0 ? S06.paperFold[1] - 4 : times[i]);
 
-  // REVIEW: Approve / Reject — a human decision.
-  const options = holdAfter !== null ? (steps[holdAfter].caption ?? '').split('/').map((s) => s.trim()).filter(Boolean) : [];
+  // REVIEW: the options — a human decision, resolved by his click to the chosen one.
+  const options = decision?.options ?? [];
   const decided = progress(frame, S06.approveClick + 1, 8, ease.inOut);
 
   // Branches.
-  const branch = progress(frame, S06.branches[0], S06.branches[1] - S06.branches[0], ease.inOut);
-
+  const branch = span(frame, S06.branches);
   const sitesP = (i: number) => progress(frame, S06.sites[0] + i * 3, 18, ease.inOut);
+
+  // Where the review options sit, relative to the REVIEW tick (frame px).
+  const optionsAt = (c: Cam): Pt => {
+    const at = holdAfter === null ? { x: 0, y: 0 } : project(c, nodes[holdAfter]);
+    return { x: at.x + 54, y: at.y + 46 };
+  };
 
   return (
     <AbsoluteFill style={{ backgroundColor: paperDay }}>
@@ -149,14 +178,15 @@ export const WorkflowScene: React.FC<SceneProps> = () => {
             return (
               <g key={side}>
                 <path d={d} fill="none" stroke={colors.accent} strokeWidth={SPINE.strokeWidth * 0.8} strokeLinecap="round" strokeDasharray={ev.strokeDasharray} strokeDashoffset={ev.strokeDashoffset} />
-                {branch > 0.97 ? <circle cx={end.x} cy={end.y} r={4.5} fill={colors.accent} /> : null}
+                {branch > 0.97 ? <circle cx={end.x} cy={end.y} r={3.6} fill={colors.accent} /> : null}
               </g>
             );
           })}
+          {/* a tick on his line at each step, drawn as the camera reaches it */}
           {nodes.map((n, i) => {
-            const k = springAt(frame, fps, i === 0 ? S06.paperFold[1] - 4 : times[i], springs.calm);
+            const k = springAt(frame, fps, tickAt(i), springs.calm);
             if (k <= 0.01) return null;
-            return <circle key={i} cx={n.x} cy={n.y} r={6.5 * k} fill={paperDay} stroke={colors.accent} strokeWidth={2.4} />;
+            return <line key={i} x1={n.x} y1={n.y} x2={n.x + TICK.length * k} y2={n.y} stroke={colors.accent} strokeWidth={TICK.width} strokeLinecap="round" />;
           })}
         </svg>
         <FoldingArtefacts nodes={nodes} />
@@ -164,14 +194,14 @@ export const WorkflowScene: React.FC<SceneProps> = () => {
 
       <RoomLight dim={1 - day} day={day} drift={frame * 0.25} />
 
-      {/* Scene 05's type, leaving */}
+      {/* Scene 05's words, continuing, then leaving */}
       {titlesOut < 1 ? (
         <AbsoluteFill style={{ opacity: 1 - titlesOut, transform: `translateY(${-14 * titlesOut}px)` }}>
-          <InsertTitles frame={S05_LAST} />
+          <InsertTitles frame={S05_END + frame} />
         </AbsoluteFill>
       ) : null}
 
-      {/* Sites — a small label where the hairlines meet his line; the impact pop-up replaces it */}
+      {/* Sites — a small label where the hairlines meet his line; it leaves before the push carries it off the top edge */}
       {(() => {
         const at = P({ x: SPINE.x, y: SPINE.top });
         return (
@@ -181,33 +211,32 @@ export const WorkflowScene: React.FC<SceneProps> = () => {
         );
       })()}
 
-      {/* Steps: the word arrives as the camera reaches it, leaves upward, a small label stays */}
+      {/* Steps: the big word arrives with the camera; as it leaves, its name settles beside the tick and stays */}
       {steps.map((step, i) => {
         const at = P(nodes[i]);
+        const l = labelP(i);
         return (
           <React.Fragment key={step.label}>
-            <Rise frame={frame} start={times[i]} exitAt={wordExit(i)} duration={12} exitDuration={8} style={{ left: at.x + 50, top: at.y - 46 }}>
+            {/* ease.out exit: mostly gone by the time its label starts to settle (no double exposure) */}
+            <Rise frame={frame} start={times[i]} exitAt={wordExit(i)} duration={S06.wordRise} exitDuration={S06.wordExit} exitEasing={ease.out} style={{ left: at.x + 50, top: at.y - 46 }}>
               <span style={{ ...STEP_WORD, color: colors.textOnLight }}>{step.label}</span>
             </Rise>
-            {labelP(i) > 0 ? (
-              <div style={{ position: 'absolute', left: at.x + 30, top: at.y - 19, opacity: labelP(i), transform: `translateY(${(1 - labelP(i)) * 10}px)` }}>
-                <span style={{ ...STEP_LABEL, color: colors.textOnLight }}>{step.label}</span>
+            {l > 0 ? (
+              <div style={{ position: 'absolute', left: at.x + 26, top: at.y - 16, opacity: Math.min(1, l * 1.3), transform: `translateY(${(1 - l) * 12}px)` }}>
+                <span style={{ ...STEP_LABEL, color: LABEL_INK }}>{step.label}</span>
               </div>
             ) : null}
           </React.Fragment>
         );
       })}
 
-      {/* REVIEW: Approve / Reject, resolved by his click */}
+      {/* REVIEW: the options, resolved by his click */}
       {holdAfter !== null && options.length > 0
         ? (() => {
-            const at = P(nodes[holdAfter]);
-            const left = at.x + 54;
-            const top = at.y + 46;
-            const start = S06.reviewCaption;
+            const { x: left, y: top } = optionsAt(cam);
             return (
               <>
-                <Rise frame={frame} start={start} exitAt={wordExit(holdAfter)} duration={14} style={{ left, top }}>
+                <Rise frame={frame} start={S06.reviewCaption} exitAt={wordExit(holdAfter)} duration={14} style={{ left, top }}>
                   <span style={{ ...type.caption, display: 'inline-flex', gap: 14, whiteSpace: 'nowrap' }}>
                     {options.map((opt, k) => (
                       <React.Fragment key={opt}>
@@ -224,15 +253,16 @@ export const WorkflowScene: React.FC<SceneProps> = () => {
                     ))}
                   </span>
                 </Rise>
-                {(() => {
-                  const target = { x: left + 46, y: top + 22 };
-                  const tIn = progress(frame, start - 2, S06.approveClick - start - 1, ease.inOut);
-                  const from = { x: target.x + 360, y: target.y + 300 };
-                  const away = progress(frame, S06.reviewResume, 12, ease.in);
-                  const pos = { x: from.x + (target.x - from.x) * tIn + away * 40, y: from.y + (target.y - from.y) * tIn + away * 30 };
-                  const vis = progress(frame, start, 6) * (1 - away);
-                  return <Pointer x={pos.x} y={pos.y} clicks={[S06.approveClick]} opacity={vis} />;
-                })()}
+                <Cursor
+                  path={reviewHand(camAt, (c) => {
+                    const o = optionsAt(c);
+                    return { x: o.x + 46, y: o.y + 22 };
+                  })}
+                  clicks={[S06.approveClick]}
+                  scale={1.5}
+                  start={S06.reviewPointer}
+                  end={S06.reviewResume + 22}
+                />
               </>
             );
           })()
@@ -250,19 +280,19 @@ export const WorkflowScene: React.FC<SceneProps> = () => {
         );
       })}
 
-      {/* Impact, pinned to the process */}
+      {/* Impact, pinned to the process: mirrored (┐), to the left of the line, reading towards it */}
       {inWorkflowA
         ? (() => {
-            // value row level with the point where the sites converge
-            const at = P({ x: SPINE.x - 560, y: SPINE.top - POPUP_VALUE_MID / END_FRAMING.s });
-            return <MetricPopup metricId={inWorkflowA} x={at.x} y={at.y} start={S06.sitesMetric} tone="light" />;
+            // value row level with the point where the sites converge, clear of the site hairlines
+            const at = P({ x: SPINE.x - POPUP_GAP.sites, y: SPINE.top - POPUP_VALUE_MID / END_FRAMING.s });
+            return <MetricPopup metricId={inWorkflowA} x={at.x - POPUP_W} y={at.y} width={POPUP_W} align="right" start={S06.sitesMetric} tone="light" />;
           })()
         : null}
       {inWorkflowB
         ? (() => {
             // value row level with CENTRALIZE
-            const at = P({ x: SPINE.x - 560, y: nodes[Math.min(4, nodes.length - 1)].y - POPUP_VALUE_MID / END_FRAMING.s });
-            return <MetricPopup metricId={inWorkflowB} x={at.x} y={at.y} start={S06.recordsMetric} tone="light" />;
+            const at = P({ x: SPINE.x - POPUP_GAP.records, y: nodes[Math.min(4, nodes.length - 1)].y - POPUP_VALUE_MID / END_FRAMING.s });
+            return <MetricPopup metricId={inWorkflowB} x={at.x - POPUP_W} y={at.y} width={POPUP_W} align="right" start={S06.recordsMetric} tone="light" />;
           })()
         : null}
     </AbsoluteFill>

@@ -42,10 +42,24 @@ export const CARD = {
   statusY: 116,
 } as const;
 
-/** AFTER only: his line runs from the card straight down into one record. */
+/**
+ * AFTER only: his line runs from the card straight down, through one small review node (a
+ * human decision: the options sit to its right and his click resolves them), into one
+ * record. Vertical, as in Scene 06.
+ */
+const LINE_X = R.x + CARD.dot.x;
+const REVIEW_Y = 300;
+const REVIEW_R = 6.5;
+const RECORD = { w: 116, h: 142, y: 404 } as const;
+
 export const AFTER_LAYOUT = {
-  line: { x: R.x + CARD.dot.x, y1: R.y + CARD_H + 2, y2: 448 },
-  record: { x: R.x + CARD.dot.x - 58, y: 456, w: 116, h: 142 },
+  /** Card → review node. */
+  line1: { x: LINE_X, y1: R.y + CARD_H + 2, y2: REVIEW_Y - REVIEW_R - 2 },
+  /** The review node: a small ring on his line. Options text starts `textDx` to its right. */
+  review: { x: LINE_X, y: REVIEW_Y, r: REVIEW_R, textDx: 22, fontSize: 26 },
+  /** Review node → record. */
+  line2: { x: LINE_X, y1: REVIEW_Y + REVIEW_R + 2, y2: RECORD.y - 8 },
+  record: { x: LINE_X - RECORD.w / 2, y: RECORD.y, w: RECORD.w, h: RECORD.h },
 } as const;
 
 /** Points on the request card, canvas coordinates. */
@@ -56,6 +70,32 @@ export const cardPoint = {
   right: { x: R.x + R.w, y: R.y + 70 },
   bottom: { x: R.x + 260, y: R.y + CARD_H },
 } as const;
+
+/** The request's action chip — where his one click submits it (canvas). */
+export const CARD_ACTION: Pt = { x: R.x + CARD.textX + 44, y: R.y + CARD.statusY + 2 };
+
+/** Where his pointer rests once the request is dealt with (end of Scene 07, all of Scene 08). */
+export const AFTER_POINTER_HOME: Pt = { x: 482, y: 440 };
+
+/** Review options: Inter Tight 500 averages ≈ 0.52 em per character; options sit `REVIEW_GAP` apart around a slash. */
+const OPTION_EM = 0.52;
+export const REVIEW_GAP = 12;
+const optionWidth = (text: string) => Math.round(text.length * AFTER_LAYOUT.review.fontSize * OPTION_EM);
+
+/** Centre of review option `k` (canvas), estimated from the option lengths. */
+export const reviewOptionCenter = (options: string[], k: number): Pt => {
+  const { x, y, textDx, fontSize } = AFTER_LAYOUT.review;
+  const slash = Math.round(fontSize * 0.3) + REVIEW_GAP * 2;
+  let left = x + textDx;
+  for (let i = 0; i < k; i++) left += optionWidth(options[i]) + slash;
+  return { x: left + optionWidth(options[k] ?? '') / 2, y: y + 1 };
+};
+
+/** Right end of the resolved review word (canvas) — where a pin can attach. */
+export const reviewChosenEnd = (chosen: string): Pt => {
+  const { x, y, textDx } = AFTER_LAYOUT.review;
+  return { x: x + textDx + optionWidth(chosen) + 8, y: y + 1 };
+};
 
 /** Size of the resolved status line on the card (Inter Tight 500). */
 export const STATUS_FONT_SIZE = 25;

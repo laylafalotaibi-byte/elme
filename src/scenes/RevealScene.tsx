@@ -17,21 +17,29 @@ import type { SceneProps } from './types';
 /**
  * Scene 05 — The Unexpected Part · INITIATIVE · light black → warm key.
  *
- *   0–10     black
- *   10–40    hero shot (medium) fades up and racks soft → sharp; rim light only;
- *            the documentary lower-third lands on his shoulder (the only time name and role appear)
- *   22–50→94 "He was a junior IT Support employee." in the space he looks into
- *   94–108   picture and line fade to near-black — silence
- *   110–138→198  "He had no previous automation experience." alone, one size up, a little
- *            right of centre; a warm key light slowly rises on him behind the type
- *   198      cut → screen insert in warm light: his notes, a blank canvas
- *   201→     supporting line settles at the bottom and stays
- *   207      LEARN.       his cursor reads a line of his notes, then traces the figure in them
- *   230      EXPERIMENT.  a dashed draft is drawn — then crossed out
- *   256      BUILD.       a second draft; the dashes close
- *   278→300  IMPROVE.     he takes the line by the middle and it straightens
+ *   0–6      black
+ *   6–20     CLOSE on him fades up and racks soft → sharp (→ 32); rim light only
+ *   10       the documentary lower-third (only with an approved name; the draft shows the
+ *            placeholder) settles on the right, clear of his silhouette
+ *   20–34    silence: just him
+ *   34→106   "He was a junior IT Support employee." — 86 px, a step up from Scene 01's 76,
+ *            in the space he looks into (72 f on screen)
+ *   96–106   picture and line fade to near-black
+ *   108→190  "He had no previous automation experience." alone, 96 px, a little right of
+ *            centre; from 120 a warm key slowly rises on him behind the type
+ *   190      cut → screen insert in warm light: his notebook page, his notes, the paper
+ *            form and a single record in miniature at either end of an empty page
+ *   191→     supporting line settles at the bottom and stays (into Scene 06)
+ *   195      LEARN.       his cursor reads a line of his notes, then turns to the page
+ *   219      EXPERIMENT.  a dashed draft is drawn — then crossed out
+ *   244–262  reverse shot: CLOSE on him, warm key, screen light on his face — he has seen
+ *            it fail (EXPERIMENT stays across both cuts)
+ *   262      back on the page: he is already drawing again
+ *   265      BUILD.       a second draft; the dashes close
+ *   289      IMPROVE.     he takes the line by the middle and it straightens
  *            (IMPROVE and the supporting line stay into Scene 06's first frames)
  *
+ * The words sit above the middle of his line, where his hand is working.
  * Scene 06 opens on this scene's last frame (see workflow/sketch.ts, workflow/timing.ts).
  */
 
@@ -39,36 +47,29 @@ import type { SceneProps } from './types';
 const RIM: Light = { exposure: 0.05, warmth: 0.3 };
 /** Line 2 opens on near-black, then the warm key rises. */
 const NEAR_BLACK: Light = { exposure: 0.02, warmth: 0.6 };
-
-/**
- * Shot B's room light runs FLOOR_B → END_B as the key rises; the darkness at the start comes
- * from an ink fade-up, not from the light. Why: HeroShot's SVG filters work in linearRGB at
- * 8 bits, so a warm near-black figure (channels ≈ 6–8, R > G > B) crosses the rounding
- * threshold one channel at a time and flashes maroon → olive → grey. FLOOR_B keeps every
- * figure channel ≥ 7 (it renders as a clean neutral). See sharedChangeRequests (HeroShot).
- */
 const END_B: Light = mixLight(NEAR_BLACK, LIGHT.warmKey, 0.62);
-const FLOOR_B: Light = { exposure: 0.17, warmth: 0.74 };
 
-/**
- * HeroShot's key is tuned for a photo; on the silhouette placeholder it barely reads, so
- * it is driven past 1 here (see sharedChangeRequests).
- */
-const KEY_GAIN = 2.3;
+/** HeroShot's key (0…1.5): a clear warm key on the face, not a hotspot. */
+const KEY = 1.15;
 
-const LINE2_SIZE = 96; // one step above displayM (76), below displayL (112)
+/** The size ladder of the film's narrator lines: Scene 01 76 → line 1 86 → line 2 96. */
+const LINE1_SIZE = 86;
+const LINE2_SIZE = 96;
 
-/**
- * Lower-third position. HeroShot's default (160, 860) straddles the silhouette's back edge
- * (half the role on the wall, half on his shoulder); set fully on his shoulder it reads cleanly.
- */
-const LOWER_THIRD = { x: 290, y: 884 } as const;
+/** Shot A: the close. Line 1 and the lower-third share one left edge in the space he looks into. */
+const SHOT_A = { textX: HERO_TEXT_SAFE.close.x + 20, line1Top: 372, width: 820, lowerThirdY: 868 } as const;
 
 /**
  * Shot B: reframed closer, scaled about the right edge so he moves left (the right edge stays
  * covered); line 2 sits slightly right of centre so it never crowds his profile.
  */
 const SHOT_B = { scale: 1.21, lineOffsetX: 64 } as const;
+
+/**
+ * The reverse shot inside the insert: the close, pushed in about the right edge so his face
+ * sits left of the word that persists over it (WORD_ANCHOR), in the light the key brought.
+ */
+const INTERCUT = { scale: 1.15, light: { exposure: 0.27, warmth: 0.86 } as Light, key: 1.05 } as const;
 
 /** Line reveals land as one thought (stagger 2, duration 18) — a little quicker than dur.line, to buy hold time. */
 const LINE_DUR = 18;
@@ -78,8 +79,8 @@ const HeroPart: React.FC = () => {
   const { story } = useStory();
   const role = story.employee.title;
 
-  // Shot A — the reveal of who he is.
-  const aIn = progress(frame, S05.heroIn, 16, ease.inOut);
+  // Shot A — the close: who he is.
+  const aIn = progress(frame, S05.heroIn, S05.heroInDur, ease.inOut);
   const aOut = progress(frame, S05.fadeOut, S05.fadeOutEnd - S05.fadeOut, ease.inOut);
   const rack = mapClamp(frame, [S05.heroIn, S05.rackEnd], [16, 0], ease.inOut);
   const showA = frame >= S05.heroIn && frame < S05.fadeOutEnd + 1;
@@ -87,20 +88,18 @@ const HeroPart: React.FC = () => {
   // Shot B — behind line 2, the warm key rises.
   const key = mapClamp(frame, [S05.keyRise, S05.cut], [0, 1], ease.inOut);
   const bIn = mapClamp(frame, [S05.keyRise - 6, S05.keyRise + 56], [0, 1], ease.inOut);
-  const lightB = mixLight(FLOOR_B, END_B, key);
+  const lightB = mixLight(NEAR_BLACK, END_B, key);
   const pushB = mapClamp(frame, [S05.fadeOutEnd, S05.cut], [1, 1.045]);
   const showB = frame >= S05.fadeOutEnd;
-
-  const safe = HERO_TEXT_SAFE.medium;
 
   return (
     <AbsoluteFill style={{ backgroundColor: colors.ink }}>
       {showA ? (
         <AbsoluteFill style={{ opacity: aIn * (1 - aOut) }}>
-          <HeroShot light={RIM} framing="medium" blur={rack} screenGlow={0.95} zoom={mapClamp(frame, [S05.heroIn, S05.fadeOutEnd], [1.03, 1])} />
+          <HeroShot light={RIM} framing="close" blur={rack} screenGlow={0.95} zoom={mapClamp(frame, [S05.heroIn, S05.fadeOutEnd], [1, 1.025])} />
         </AbsoluteFill>
       ) : null}
-      {showA ? <LowerThird start={S05.lowerThird} exitAt={S05.fadeOut} tone="dark" x={LOWER_THIRD.x} y={LOWER_THIRD.y} /> : null}
+      {showA ? <LowerThird start={S05.lowerThird} exitAt={S05.fadeOut} tone="dark" x={SHOT_A.textX} y={SHOT_A.lowerThirdY} /> : null}
       {showA ? (
         <LineReveal
           text={story.reveal.lines[0]}
@@ -110,19 +109,25 @@ const HeroPart: React.FC = () => {
           keepTogether={[role]}
           exitAt={S05.fadeOut}
           exitDuration={S05.fadeOutEnd - S05.fadeOut}
-          style={{ position: 'absolute', left: safe.x + 30, top: 392, width: 820, ...type.displayM, color: colors.textOnDark }}
+          style={{
+            position: 'absolute',
+            left: SHOT_A.textX,
+            top: SHOT_A.line1Top,
+            width: SHOT_A.width,
+            ...type.displayM,
+            fontSize: LINE1_SIZE,
+            lineHeight: 1.06,
+            color: colors.textOnDark,
+          }}
         />
       ) : null}
 
       {showB ? (
         // Reframed after the fade: he sits further left and closer, looking into the line.
-        // Faded up from black with an ink overlay, NOT container opacity: a semi-transparent
-        // layer around HeroShot's key-light filter group renders the silhouette maroon in Chrome.
-        <AbsoluteFill>
+        <AbsoluteFill style={{ opacity: bIn }}>
           <AbsoluteFill style={{ transform: `scale(${SHOT_B.scale})`, transformOrigin: '100% 45%' }}>
-            <HeroShot light={lightB} framing="medium" keyLight={KEY_GAIN * key} screenGlow={0.3} blur={1.2} zoom={pushB} />
+            <HeroShot light={lightB} framing="medium" keyLight={KEY * key} screenGlow={0.3} blur={1.2} zoom={pushB} />
           </AbsoluteFill>
-          {bIn < 1 ? <AbsoluteFill style={{ backgroundColor: colors.ink, opacity: 1 - bIn }} /> : null}
         </AbsoluteFill>
       ) : null}
       {showB ? (
@@ -150,14 +155,37 @@ const HeroPart: React.FC = () => {
   );
 };
 
-const InsertPart: React.FC = () => (
-  <AbsoluteFill>
-    <ScreenInsert light={LIGHT.warmKey} />
-    <LearningInsert />
-    <RoomLight dim={1} day={0} />
-    <InsertTitles />
-  </AbsoluteFill>
-);
+/** The reverse shot: him, having seen the draft fail. Still; the slightest push. */
+const Intercut: React.FC = () => {
+  const frame = useCurrentFrame();
+  const push = mapClamp(frame, [S05.intercut[0], S05.intercut[1]], [1, 1.012]);
+  return (
+    <AbsoluteFill style={{ backgroundColor: colors.ink }}>
+      <AbsoluteFill style={{ transform: `scale(${INTERCUT.scale})`, transformOrigin: '100% 50%' }}>
+        <HeroShot light={INTERCUT.light} framing="close" keyLight={INTERCUT.key} screenGlow={1} zoom={push} />
+      </AbsoluteFill>
+    </AbsoluteFill>
+  );
+};
+
+const InsertPart: React.FC = () => {
+  const frame = useCurrentFrame();
+  const onHim = frame >= S05.intercut[0] && frame < S05.intercut[1];
+  return (
+    <AbsoluteFill>
+      {onHim ? (
+        <Intercut />
+      ) : (
+        <>
+          <ScreenInsert light={LIGHT.warmKey} />
+          <LearningInsert />
+          <RoomLight dim={1} day={0} />
+        </>
+      )}
+      <InsertTitles tone={onHim ? 'dark' : 'light'} />
+    </AbsoluteFill>
+  );
+};
 
 export const RevealScene: React.FC<SceneProps> = () => {
   const frame = useCurrentFrame();

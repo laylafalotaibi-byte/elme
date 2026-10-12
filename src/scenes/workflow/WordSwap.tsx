@@ -1,6 +1,7 @@
 import React from 'react';
 import { useCurrentFrame } from 'remotion';
 import { ease, progress } from '../../campaign/motion';
+import { MASK_PADDING } from '../../components/typography/Reveal';
 
 /**
  * One word at a time in one place: each word rises from behind a mask and, when the next
@@ -16,10 +17,12 @@ export const WordSwap: React.FC<{
   /** How long the outgoing word takes to leave (it starts leaving `lead` frames before the next arrives). */
   exitDuration?: number;
   lead?: number;
+  /** 'center': each word is centred on the container's left edge (place the container at the centre point). */
+  align?: 'left' | 'center';
   style?: React.CSSProperties;
-  /** Render at this frame instead of the current one (Scene 06 holds Scene 05's last frame). */
+  /** Render at this frame instead of the current one (Scene 06 continues Scene 05's type). */
   frame?: number;
-}> = ({ words, starts, duration = 16, exitDuration = 7, lead = 5, style, frame: frameOverride }) => {
+}> = ({ words, starts, duration = 16, exitDuration = 7, lead = 3, align = 'left', style, frame: frameOverride }) => {
   const current = useCurrentFrame();
   const frame = frameOverride ?? current;
   return (
@@ -39,9 +42,9 @@ export const WordSwap: React.FC<{
               left: 0,
               top: 0,
               overflow: 'hidden',
-              padding: '0.06em 0.12em 0.16em 0.04em',
-              margin: '-0.06em -0.12em -0.16em -0.04em',
+              ...MASK_PADDING,
               whiteSpace: 'nowrap',
+              transform: align === 'center' ? 'translateX(-50%)' : undefined,
             }}
           >
             <div

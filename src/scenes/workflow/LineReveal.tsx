@@ -1,6 +1,7 @@
 import React from 'react';
 import { useCurrentFrame } from 'remotion';
 import { ease, progress } from '../../campaign/motion';
+import { Mask } from '../../components/typography/Reveal';
 
 /**
  * A line that rises as one thought: every word rises from its own mask with a very small
@@ -12,7 +13,7 @@ export const tokenize = (text: string, keepTogether: string[] = []) => {
   keepTogether.filter(Boolean).forEach((phrase) => {
     marked = marked.split(phrase).join(phrase.replace(/\s+/g, '\u0000'));
   });
-  return marked.split(/\s+/).filter(Boolean).map((t) => t.replace(/\u0000/g, ' '));
+  return marked.split(/\s+/).filter(Boolean).map((t) => t.replace(/\u0000/g, ' '));
 };
 
 export const lineRevealEnd = (text: string, start: number, stagger = 2, duration = 22, keepTogether: string[] = []) =>
@@ -41,18 +42,9 @@ export const LineReveal: React.FC<{
         const p = progress(frame, start + i * stagger, duration, ease.out);
         return (
           <React.Fragment key={i}>
-            <span
-              style={{
-                display: 'inline-block',
-                overflow: 'hidden',
-                verticalAlign: 'top',
-                padding: '0.06em 0.1em 0.16em 0.04em',
-                margin: '-0.06em -0.1em -0.16em -0.04em',
-                whiteSpace: 'nowrap',
-              }}
-            >
+            <Mask style={{ whiteSpace: 'nowrap' }}>
               <span style={{ display: 'inline-block', transform: `translateY(${(1 - p) * 1.05 - out * 0.18}em)`, opacity: Math.min(1, p * 1.5) }}>{token}</span>
-            </span>
+            </Mask>
             {i < tokens.length - 1 ? ' ' : null}
           </React.Fragment>
         );

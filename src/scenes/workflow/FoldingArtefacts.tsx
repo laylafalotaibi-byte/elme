@@ -1,7 +1,7 @@
 import React from 'react';
 import { useCurrentFrame } from 'remotion';
 import { shadows } from '../../campaign/theme';
-import { ease, progress } from '../../campaign/motion';
+import { ease, span } from '../../campaign/motion';
 import { useStory } from '../../campaign/StoryContext';
 import { PaperForm } from '../../components/ui/artifacts/PaperForm';
 import { EmailCard } from '../../components/ui/artifacts/Messages';
@@ -15,10 +15,12 @@ import { S06 } from './timing';
  *  - CENTRALIZE: scattered files merge into one, which joins the line
  *  - NOTIFY:     the email collapses into the line
  * BEFORE geometry (small rotations) straightens as each one folds. System 800 is not here:
- * it never becomes a step.
+ * it never becomes a step. The scattered files are background texture, so they sit out of
+ * focus and a little faded — clearly secondary to the step words.
  */
 
-const span = (frame: number, s: readonly [number, number], easing = ease.inOut) => progress(frame, s[0], s[1] - s[0], easing);
+/** Depth of field on the scattered files (world px; ≈ 2 px on screen while tracking). */
+const FILES_SOFT = { blur: 1.3, opacity: 0.66 } as const;
 
 const Placed: React.FC<{ at: Pt; rotate: number; sx: number; sy: number; opacity: number; children: React.ReactNode }> = ({ at, rotate, sx, sy, opacity, children }) =>
   opacity <= 0.001 || sx <= 0.001 ? null : (
@@ -79,9 +81,11 @@ export const FoldingArtefacts: React.FC<{ nodes: Pt[] }> = ({ nodes }) => {
   return (
     <>
       <Placed {...paper} opacity={paperIn}>
-        <PaperForm {...a.form} fill={1} sign={1} width={360} style={{ boxShadow: shadows.light }} />
+        {/* the form as it is submitted: filled in, not signed — no signature step in the new flow */}
+        <PaperForm {...a.form} fill={1} sign={0} width={360} style={{ boxShadow: shadows.light }} />
       </Placed>
 
+      <div style={{ position: 'absolute', inset: 0, filter: `blur(${FILES_SOFT.blur}px)`, opacity: FILES_SOFT.opacity }}>
       {chips.map((c, i) => {
         const pos = { x: c.x + (meet.x - c.x) * merge, y: c.y + (meet.y - c.y) * merge };
         const merged = fold(pos, c.r * (1 - merge), 0.56, centralize, ff, fs);
@@ -94,6 +98,7 @@ export const FoldingArtefacts: React.FC<{ nodes: Pt[] }> = ({ nodes }) => {
           </Placed>
         );
       })}
+      </div>
 
       <Placed {...email} opacity={emailIn}>
         <EmailCard to={a.email.to} subject={a.email.subject} preview={a.email.preview} unread={false} tone="light" width={440} />

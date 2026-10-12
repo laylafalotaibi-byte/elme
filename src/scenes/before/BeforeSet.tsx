@@ -10,6 +10,7 @@ import { Cursor } from '../../components/ui/Cursor';
 import { ClutterScreen } from './ClutterScreen';
 import { ScreenDesktop } from './props';
 import { drift as driftAt } from './shared';
+import { DESK_PILE_BEATS, IDLE_CURSOR_AT } from './timing';
 
 /**
  * BEFORE set — the "surrounded" workspace.
@@ -26,14 +27,17 @@ import { drift as driftAt } from './shared';
 
 /* ----------------------------------------------------------------- desk pile */
 
-type PileSheet = { id: string; x: number; y: number; rot: number; enter?: number; fill?: number; sign?: number };
+type PileSheet = { id: string; x: number; y: number; rot: number; enter?: number; fill?: number; sign?: number; variant: number };
 
-/** Paper at the desk edge (frame coordinates of the Workspace shot). */
+/**
+ * Paper at the desk edge (frame coordinates of the Workspace shot; x, y = the sheet's top
+ * centre). Each loop's form comes from another site: a different hand (`variant`).
+ */
 export const DESK_PILE: PileSheet[] = [
-  { id: 'p0', x: 1430, y: 884, rot: -7 },
-  { id: 'p1', x: 1520, y: 892, rot: 4 },
-  { id: 'p2', x: 1380, y: 904, rot: 2, enter: 161 },
-  { id: 'p3', x: 1560, y: 914, rot: -3, enter: 205 },
+  { id: 'p0', x: 1430, y: 884, rot: -7, variant: 0 },
+  { id: 'p1', x: 1520, y: 892, rot: 4, variant: 1 },
+  { id: 'p2', x: 1380, y: 904, rot: 2, enter: DESK_PILE_BEATS.p2, variant: 2 },
+  { id: 'p3', x: 1560, y: 914, rot: -3, enter: DESK_PILE_BEATS.p3, variant: 3 },
 ];
 
 export const DeskPile: React.FC<{ frame: number; light: Light; settled?: boolean; drift?: number }> = ({ frame, light, settled = false, drift = 0 }) => {
@@ -61,7 +65,7 @@ export const DeskPile: React.FC<{ frame: number; light: Light; settled?: boolean
               transformOrigin: '50% 0%',
             }}
           >
-            <PaperForm title={form.title} fields={form.fields} signatureLabel={form.signatureLabel} fill={sheet.fill ?? 1} sign={sheet.sign ?? 1} width={360} />
+            <PaperForm title={form.title} fields={form.fields} signatureLabel={form.signatureLabel} fill={sheet.fill ?? 1} sign={sheet.sign ?? 1} variant={sheet.variant} width={360} />
           </div>
         );
       })}
@@ -105,7 +109,7 @@ export const BeforeWorkspace: React.FC<{
 );
 
 /** Where his cursor rests at the end of Scene 02 (screen canvas). */
-export const IDLE_CURSOR = { frame: 0, x: 930, y: 250 } as const;
+export const IDLE_CURSOR = { frame: 0, ...IDLE_CURSOR_AT } as const;
 
 /** Periodic interruption for the drifting clutter: a ping nudging in at the screen edge. */
 const INTERRUPT_PERIOD = 75;

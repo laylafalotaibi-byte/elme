@@ -54,7 +54,7 @@ export const PaperStack: React.FC<{ spread: number }> = ({ spread }) => {
   );
 };
 
-/** The loose pile of handled forms, the pen on top. */
+/** The loose pile of handled forms — the same form, filled in by different hands — the pen on top. */
 export const PaperPile: React.FC = () => {
   const { story } = useStory();
   const form = story.before.artifacts.form;
@@ -68,7 +68,7 @@ export const PaperPile: React.FC = () => {
   return (
     <>
       {sheets.map((s, i) => (
-        <Sheet key={i} form={form} x={PILE.x + s.dx} y={PILE.y + s.dy} rotate={s.rot} fill={1} sign={1} />
+        <Sheet key={i} form={form} x={PILE.x + s.dx} y={PILE.y + s.dy} rotate={s.rot} fill={1} sign={1} variant={i + 1} />
       ))}
       <Pen x={PILE.x - 150} y={PILE.y + 120} rotate={-32} length={290} />
     </>

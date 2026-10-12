@@ -27,11 +27,14 @@ const pathOf = (pts: Pt[]) => `M ${pts[0].x} ${pts[0].y} C ${pts[1].x} ${pts[1].
 export const SKETCH = {
   start: P(640, 600),
   end: P(1200, 600),
-  /** Dashed placeholder boxes at either end (start = the form, end = the record). */
-  boxA: { ...P(590, 600), size: 96 },
-  boxB: { ...P(1250, 600), size: 96 },
+  /** The two ends of his problem, in miniature: the paper form (left) and a single record (right). Centres. */
+  form: P(586, 600),
+  record: P(1262, 600),
   strokeWidth: 3.4,
 } as const;
+
+/** Where each learning word sits on the insert: centred above the middle of his line, clear of the drafts. */
+export const WORD_ANCHOR = { x: P(920, 600).x, top: 300 } as const;
 
 /** A cubic path with a fixed structure, so drafts can morph into the straight line. */
 export type Curve = { start: Pt; segs: Array<[Pt, Pt, Pt]> };
